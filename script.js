@@ -185,67 +185,126 @@ function showTab(tab) {
 }
 
 // --- Session (unchanged) ---
-// =================================================================
-// --- INICIO DEL NUEVO BLOQUE DE AUTENTICACIÓN Y CARGA DE DATOS ---
-// =================================================================
+const currentUser = sessionStorage.getItem("sociosxit_user");
+if (!currentUser) window.location.href = "index.html";
+else {
+  userNameEl.textContent = currentUser;
+  loadUserBalance(currentUser);
+  loadUserPurchases(currentUser);
+  loadUserSpendingAndLevel(currentUser); // NEW: Load spending and level
+  // also set menu values
+  menuUserName.textContent = currentUser;
+  menuAvatar.textContent = String(currentUser).charAt(0)?.toUpperCase() || "U";
+}
 
-// Verifica el estado de autenticación de Firebase
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    // USUARIO AUTENTICADO: Firebase lo confirma, ahora tiene permisos de lectura
-    
-    // 1. Obtiene el email (o el campo que uses para el userKey)
-    const currentUserEmail = user.email || user.uid; 
-    
-    // 2. Guarda la sesión localmente (para que la app lo sepa, aunque Firebase lo verifica)
-    sessionStorage.setItem("sociosxit_user", currentUserEmail); 
-    const currentUser = currentUserEmail;
+logoutBtn.onclick = () => {
+  sessionStorage.removeItem("sociosxit_user");
+  window.location.href = "index.html";
+};
 
-    // 3. Configura la UI con los datos del usuario
-    userNameEl.textContent = currentUser;
-    menuUserName.textContent = currentUser;
-    menuAvatar.textContent = String(currentUser).charAt(0)?.toUpperCase() || "U";
+// menu interactions (open from RIGHT)
+function openMenu() {
+  sideMenu.classList.add("open");
+  menuBackdrop.style.display = "block";
+  setTimeout(()=> menuBackdrop.style.opacity = "1", 10);
+  hamburgerBtn.classList.add("open");
+  sideMenu.setAttribute("aria-hidden", "false");
+  // menuUserBalance updated by loadUserBalance listener
+}
+function closeMenu() {
+  sideMenu.classList.remove("open");
+  menuBackdrop.style.opacity = "0";
+  hamburgerBtn.classList.remove("open");
+  sideMenu.setAttribute("aria-hidden", "true");
+  setTimeout(()=> menuBackdrop.style.display = "none", 240);
+}
 
-    // 4. INICIA TODAS LAS LECTURAS DE LA BASE DE DATOS (AHORA SEGURO)
-    loadUserBalance(currentUser);
-    loadUserPurchases(currentUser);
-    loadUserSpendingAndLevel(currentUser); 
-    
-    // 5. Listener de Publicaciones (Lectura en tiempo real)
-    pubsRef.on("value", (snapshot) => {
-      publicationsContainer.innerHTML = "";
-      const data = snapshot.val();
-      if (!data) {
-        publicationsContainer.innerHTML = "<p>No hay publicaciones disponibles.</p>";
-        return;
-      }
-      Object.keys(data).forEach(key => {
-        const pub = data[key];
-        publicationsContainer.prepend(createPublicationElement(pub, key));
-      });
-    });
+hamburgerBtn.addEventListener("click", ()=> {
+  if (sideMenu.classList.contains("open")) closeMenu();
+  else openMenu();
+});
 
-  } else {
-    // USUARIO NO AUTENTICADO: Redirige al login.
-    sessionStorage.removeItem("sociosxit_user");
-    window.location.href = "index.html";
+// close when clicking backdrop
+menuBackdrop.addEventListener("click", closeMenu);
+
+// change hamburger into X on scroll (as requested) - style only
+window.addEventListener("scroll", () => {
+  const px = window.scrollY || document.documentElement.scrollTop;
+  if (px > 20) hamburgerBtn.classList.add("open");
+  else {
+    // don't remove open if menu is open
+    if (!sideMenu.classList.contains("open")) hamburgerBtn.classList.remove("open");
   }
 });
 
-// 6. Modifica el botón de Logout para cerrar la sesión de Firebase Auth
-logoutBtn.onclick = () => {
-  firebase.auth().signOut().then(() => {
-    sessionStorage.removeItem("sociosxit_user");
-    window.location.href = "index.html";
+// menu item behavior (navigate tabs + close)
+menuPublicaciones.addEventListener("click", ()=> { showTab("pubs"); closeMenu(); });
+menuKeys.addEventListener("click", ()=> { showTab("keys"); closeMenu(); });
+menuLogout.addEventListener("click", ()=> {
+  sessionStorage.removeItem("sociosxit_user");
+  window.location.href = "index.html";
+});
+
+// =================================================================
+// --- LÓGICA DE RECARGA DE SALDO (NUEVO) ---
+// =================================================================
+
+// Abrir modal de recarga
+menuRecharge.addEventListener("click", ()=> { 
+  closeMenu(); // Cierra el menú lateral
+  rechargeModal.style.display = "flex";
+  rechargeAmountInput.value = ""; // Limpia el input
+  rechargeError.classList.add("hidden");
+});
+
+// Cerrar modal de recarga
+rechargeCancelBtn.addEventListener("click", ()=> { 
+  rechargeModal.style.display = "none";
+});
+
+// Lógica de recarga (redirección a WhatsApp)
+rechargeConfirmBtn.addEventListener("click", ()=> { 
+  const amount = parseFloat(rechargeAmountInput.value);
+  const minAmount = 4.00;
+  const whatsappNumber = "+573142369516";
+
+  if (isNaN(amount) || amount < minAmount) {
+    rechargeError.classList.remove("hidden");
+    return;
+  }
+  
+  rechargeError.classList.add("hidden");
+  rechargeModal.style.display = "none";
+  
+  // Formatear mensaje para URL
+  const message = `Hola quiero recargar ${amount.toFixed(2)} USD en la pagina de socios`;
+  const encodedMessage = encodeURIComponent(message);
+  
+  // Crear URL de WhatsApp
+  const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+  
+  // Redirigir
+  window.open(whatsappURL, '_blank');
+});
+
+// =================================================================
+// --- FIN LÓGICA DE RECARGA ---
+// =================================================================
+
+
+// --- Publicaciones (unchanged logic) ---
+pubsRef.on("value", (snapshot) => {
+  publicationsContainer.innerHTML = "";
+  const data = snapshot.val();
+  if (!data) {
+    publicationsContainer.innerHTML = "<p>No hay publicaciones disponibles.</p>";
+    return;
+  }
+  Object.keys(data).forEach(key => {
+    const pub = data[key];
+    publicationsContainer.prepend(createPublicationElement(pub, key));
   });
-};
-
-// El resto de la lógica de menú (hamburguer, etc.) no necesita modificarse
-
-// =================================================================
-// --- FIN DEL NUEVO BLOQUE DE AUTENTICACIÓN Y CARGA DE DATOS ---
-// =================================================================
-
+});
 
 // create publication card (keeps your exact design)
 function createPublicationElement(pub, key) {
