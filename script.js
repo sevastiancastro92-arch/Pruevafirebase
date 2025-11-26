@@ -260,31 +260,26 @@ if (menuTelegramBot) {
         if (!currentUser) {
             alert("Debes iniciar sesión para vincular tu Telegram.");
             return;
-        <script>
-document.addEventListener("DOMContentLoaded", function() {
+        }
 
-    const menuTelegramBot = document.getElementById("menuTelegramBot");
+        closeMenu(); // Cierra el menú lateral
 
-    if (menuTelegramBot) {
-        menuTelegramBot.addEventListener("click", async () => {
-            if (!currentUser) {
-                alert("Debes iniciar sesión para vincular tu Telegram.");
-                return;
-            }
+        const userId = sanitizeEmail(currentUser);
 
-            const userId = sanitizeEmail(currentUser);
-            const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
+        // Crear código único
+        const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
 
-            await db.ref(`users/${userId}/telegramLinkCode`).set(code);
+        // Guardarlo en Firebase
+        await db.ref(`users/${userId}/telegramLinkCode`).set(code);
 
-            const botUsername = "Socios66.bot";
-            const tgURL = `https://t.me/${botUsername}?start=${code}`;
-            window.open(tgURL, "_blank");
-        });
-    }
+        // Cambia por el usuario de tu bot. USA TU NOMBRE DE BOT REAL AQUÍ.
+        const botUsername = "TU_BOT_AQUI";  
 
-});
-</script>
+        // Abrir Telegram con el /start <code>
+        const tgURL = `https://t.me/${botUsername}?start=${code}`;
+        window.open(tgURL, "_blank");
+    });
+}
 /* =====================================================
 // --- FIN LÓGICA DE VINCULACIÓN DE TELEGRAM ---
 // ===================================================== */
