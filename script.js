@@ -821,11 +821,6 @@ function copiarKey(text) {
 
 // show publications by default
 showTab("pubs"); 
-... todo tu script ...
-
-// =============================
-// AQUÍ VA EL BOT DE TELEGRAM
-// =============================
 document.addEventListener("DOMContentLoaded", function() {
 
     const menuTelegramBot = document.getElementById("menuTelegramBot");
