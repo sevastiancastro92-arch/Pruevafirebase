@@ -249,34 +249,7 @@ window.location.href = "index.html";
 /* =====================================================
 // --- LÓGICA DE VINCULACIÓN DE TELEGRAM (INTEGRADO AQUÍ) ---
 // ===================================================== */
-if (menuTelegramBot) {
-    menuTelegramBot.addEventListener("click", async () => {
-        if (!currentUser) {
-            alert("Debes iniciar sesión para vincular tu Telegram.");
-            return;
-        }
-
-        closeMenu(); // Cierra el menú lateral antes de abrir Telegram
-
-        const userId = sanitizeEmail(currentUser);
-
-        // Crear código único
-        const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
-
-        // Guardarlo en Firebase
-        await db.ref(`users/${userId}/telegramLinkCode`).set(code);
-
-        // Cambia por el usuario de tu bot
-        const botUsername = "Socios66.bot";  
-
-        // Abrir Telegram con el /start <code>
-        const tgURL = `https://t.me/${botUsername}?start=${code}`;
-        window.open(tgURL, "_blank");
-    });
-}
-/* =====================================================
-// --- FIN LÓGICA DE VINCULACIÓN DE TELEGRAM ---
-// ===================================================== */
+if (
 
 
 // =================================================================
@@ -857,6 +830,33 @@ filterSelect.onchange = renderPurchases;
 function copiarKey(text) {
 navigator.clipboard.writeText(text).then(() => alert("🔑 Clave copiada al portapapeles."));
 }
+menuTelegramBot) {
+    menuTelegramBot.addEventListener("click", async () => {
+        if (!currentUser) {
+            alert("Debes iniciar sesión para vincular tu Telegram.");
+            return;
+        }
 
+        closeMenu(); // Cierra el menú lateral antes de abrir Telegram
+
+        const userId = sanitizeEmail(currentUser);
+
+        // Crear código único
+        const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
+
+        // Guardarlo en Firebase
+        await db.ref(`users/${userId}/telegramLinkCode`).set(code);
+
+        // Cambia por el usuario de tu bot
+        const botUsername = "Socios66.bot";  
+
+        // Abrir Telegram con el /start <code>
+        const tgURL = `https://t.me/${botUsername}?start=${code}`;
+        window.open(tgURL, "_blank");
+    });
+}
+/* =====================================================
+// --- FIN LÓGICA DE VINCULACIÓN DE TELEGRAM ---
+// ===================================================== */
 // show publications by default
 showTab("pubs");
