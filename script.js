@@ -244,6 +244,31 @@ menuLogout.addEventListener("click", ()=> {
   window.location.href = "index.html";
 });
 
+const menuTelegramBot = document.getElementById("menuTelegramBot");
+
+if (menuTelegramBot) {
+    menuTelegramBot.addEventListener("click", async () => {
+        if (!currentUser) {
+            alert("Debes iniciar sesión para vincular tu Telegram.");
+            return;
+        }
+
+        const userId = sanitizeEmail(currentUser);
+
+        // Crear código único
+        const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
+
+        // Guardarlo en Firebase
+        await db.ref(`users/${userId}/telegramLinkCode`).set(code);
+
+        // Cambia por el usuario de tu bot
+        const botUsername = "TU_BOT_AQUI";  
+
+        // Abrir Telegram con el /start <code>
+        const tgURL = `https://t.me/${botUsername}?start=${code}`;
+        window.open(tgURL, "_blank");
+    });
+}
 // =================================================================
 // --- LÓGICA DE RECARGA DE SALDO (NUEVO) ---
 // =================================================================
@@ -820,28 +845,4 @@ function copiarKey(text) {
 }
 
 // show publications by default
-showTab("pubs"); 
-document.addEventListener("DOMContentLoaded", function() {
-
-    const menuTelegramBot = document.getElementById("menuTelegramBot");
-
-    if (menuTelegramBot) {
-        menuTelegramBot.addEventListener("click", async () => {
-            if (!currentUser) {
-                alert("Debes iniciar sesión para vincular tu Telegram.");
-                return;
-            }
-
-            const userId = sanitizeEmail(currentUser);
-            const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
-
-            await db.ref(`users/${userId}/telegramLinkCode`).set(code);
-
-            const botUsername = "Socios66.bot";
-            const tgURL = `https://t.me/${botUsername}?start=${code}`;
-
-            window.open(tgURL, "_blank");
-        });
-    }
-
-});
+showTab("pubs");
