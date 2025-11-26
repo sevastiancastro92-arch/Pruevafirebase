@@ -130,7 +130,7 @@ const menuLogout = document.getElementById("menuLogout");
 // NUEVO ELEMENTO DE MENÚ
 const menuRecharge = document.getElementById("menuRecharge");
 // NUEVO ELEMENTO DE MENÚ TELEGRAM (DEBE ESTAR DEFINIDO)
-const menuTelegramBot = document.getElementById("menuTelegramBot"); // Se asume que este elemento existe en tu HTML
+const menuTelegramBot = document.getElementById("menuTelegramBot"); 
 
 // existing modals
 const confirmModal = document.getElementById("confirmModal");
@@ -182,6 +182,11 @@ myKeysContainer.classList.remove("hidden");
 tabPublicaciones.classList.remove("active");
 tabKeys.classList.add("active");
 }
+}
+
+// --- sanitize email (unchanged) ---
+function sanitizeEmail(email) {
+return email.replace(/\./g, "_"); // Utiliza un modificador global para reemplazar todos los puntos
 }
 
 // --- Session (unchanged) ---
@@ -247,9 +252,42 @@ window.location.href = "index.html";
 
 
 /* =====================================================
-// --- LÓGICA DE VINCULACIÓN DE TELEGRAM (INTEGRADO AQUÍ) ---
+// --- LÓGICA DE VINCULACIÓN DE TELEGRAM (REUBICADO AQUÍ) ---
+// La lógica se mueve aquí, después de que 'currentUser', 'db', y 'sanitizeEmail' están definidas.
 // ===================================================== */
-if (
+if (menuTelegramBot) {
+    menuTelegramBot.addEventListener("click", async () => {
+        if (!currentUser) {
+            alert("Debes iniciar sesión para vincular tu Telegram.");
+            return;
+        <script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const menuTelegramBot = document.getElementById("menuTelegramBot");
+
+    if (menuTelegramBot) {
+        menuTelegramBot.addEventListener("click", async () => {
+            if (!currentUser) {
+                alert("Debes iniciar sesión para vincular tu Telegram.");
+                return;
+            }
+
+            const userId = sanitizeEmail(currentUser);
+            const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
+
+            await db.ref(`users/${userId}/telegramLinkCode`).set(code);
+
+            const botUsername = "Socios66.bot";
+            const tgURL = `https://t.me/${botUsername}?start=${code}`;
+            window.open(tgURL, "_blank");
+        });
+    }
+
+});
+</script>
+/* =====================================================
+// --- FIN LÓGICA DE VINCULACIÓN DE TELEGRAM ---
+// ===================================================== */
 
 
 // =================================================================
@@ -726,10 +764,6 @@ alert("Ocurrió un error al procesar la compra.");
 }
 }
 
-// --- sanitize email (unchanged) ---
-function sanitizeEmail(email) {
-return email.replace(/\./g, "_"); // Utiliza un modificador global para reemplazar todos los puntos
-}
 
 // --- load user balance (real-time) (unchanged, but also updates menu) ---
 function loadUserBalance(email) {
@@ -830,33 +864,6 @@ filterSelect.onchange = renderPurchases;
 function copiarKey(text) {
 navigator.clipboard.writeText(text).then(() => alert("🔑 Clave copiada al portapapeles."));
 }
-menuTelegramBot) {
-    menuTelegramBot.addEventListener("click", async () => {
-        if (!currentUser) {
-            alert("Debes iniciar sesión para vincular tu Telegram.");
-            return;
-        }
 
-        closeMenu(); // Cierra el menú lateral antes de abrir Telegram
-
-        const userId = sanitizeEmail(currentUser);
-
-        // Crear código único
-        const code = "TG-" + Math.floor(100000 + Math.random() * 900000);
-
-        // Guardarlo en Firebase
-        await db.ref(`users/${userId}/telegramLinkCode`).set(code);
-
-        // Cambia por el usuario de tu bot
-        const botUsername = "Socios66.bot";  
-
-        // Abrir Telegram con el /start <code>
-        const tgURL = `https://t.me/${botUsername}?start=${code}`;
-        window.open(tgURL, "_blank");
-    });
-}
-/* =====================================================
-// --- FIN LÓGICA DE VINCULACIÓN DE TELEGRAM ---
-// ===================================================== */
 // show publications by default
 showTab("pubs");
