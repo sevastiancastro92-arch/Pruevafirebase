@@ -1,4 +1,3 @@
-
 (function(){
   const canvas = document.getElementById('particles');
   const ctx = canvas.getContext('2d');
@@ -531,6 +530,7 @@ function updateLevelUI(spending) {
 
 /**
  * Loads the user's total accumulated spending in real-time.
+ * FIXED: Uses originalPrice to calculate level, ensuring discounts don't hinder progress.
  */
 function loadUserSpendingAndLevel(email) {
     const userKey = sanitizeEmail(email);
@@ -541,13 +541,11 @@ function loadUserSpendingAndLevel(email) {
         let totalSpent = 0;
         if (purchases) {
             Object.values(purchases).forEach(p => {
-                totalSpent += parseFloat(p.price || 0); // Price saved in history is the ACTUAL PRICE PAID
+                // FIXED: Use originalPrice if available, otherwise price.
+                const val = parseFloat(p.originalPrice || p.price || 0);
+                totalSpent += isNaN(val) ? 0 : val; 
             });
         }
-        // Use original price from purchase for calculation to avoid double counting discounts
-        // Sum all "price" fields from the purchase history (which is the actual amount spent).
-        // NOTE: This assumes 'price' in purchases history reflects the amount PAID.
-
         updateLevelUI(totalSpent);
     });
 }
