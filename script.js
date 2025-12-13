@@ -1,4 +1,3 @@
-
 (function(){
   const canvas = document.getElementById('particles');
   const ctx = canvas.getContext('2d');
@@ -291,7 +290,7 @@ rechargeConfirmBtn.addEventListener("click", ()=> {
 // =================================================================
 
 
-// --- Publicaciones (unchanged logic) ---
+// --- Publicaciones (MODIFICADO PARA ORDENAR POR VENTAS) ---
 pubsRef.on("value", (snapshot) => {
   publicationsContainer.innerHTML = "";
   const data = snapshot.val();
@@ -299,9 +298,26 @@ pubsRef.on("value", (snapshot) => {
     publicationsContainer.innerHTML = "<p>No hay publicaciones disponibles.</p>";
     return;
   }
-  Object.keys(data).forEach(key => {
-    const pub = data[key];
-    publicationsContainer.prepend(createPublicationElement(pub, key));
+  
+  // 1. Convertir el objeto de datos a un array
+  const pubsArray = Object.keys(data).map(key => {
+    return {
+      id: key,
+      ...data[key]
+    };
+  });
+
+  // 2. Ordenar el array: Los que tengan mayor 'buyCount' van primero
+  pubsArray.sort((a, b) => {
+    const salesA = a.buyCount || 0; // Si no existe, es 0
+    const salesB = b.buyCount || 0;
+    return salesB - salesA; // Orden descendente (Mayor a menor)
+  });
+
+  // 3. Renderizar en el orden correcto
+  pubsArray.forEach(pub => {
+    // Usamos appendChild porque el array ya está ordenado del mejor al peor
+    publicationsContainer.appendChild(createPublicationElement(pub, pub.id));
   });
 });
 
@@ -598,7 +614,7 @@ confirmOk.onclick = async () => {
 };
 
 
-// --- Main purchase function (MODIFIED to use finalPrice and save originalPrice) ---
+// --- Main purchase function (MODIFIED for Sales Counter) ---
 async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice) {
   try {
     const email = currentUser;
@@ -678,6 +694,14 @@ async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice)
       discountApplied: Number(originalPrice - finalPrice).toFixed(2), // NEW: Store discount amount
       days: originalBtn.days || originalBtn.duration || "",
       date: new Date().toISOString()
+    });
+    
+    // ============================================
+    // NUEVO: INCREMENTAR CONTADOR DE VENTAS (buyCount)
+    // ============================================
+    // Esto es lo que permite que el producto suba de posición
+    await db.ref(`publications/${pubId}/buyCount`).transaction((current_value) => {
+      return (current_value || 0) + 1;
     });
 
     // 4) show key modal with copy button
