@@ -126,13 +126,13 @@ const db = firebase.database();
 const auth = firebase.auth(); 
 const usersRef = db.ref("users");
 const uidMapRef = db.ref("uid_map"); 
-const adminLogsRef = db.ref("admin_logs"); // ⭐ Nueva referencia para el admin
+const adminLogsRef = db.ref("admin_logs"); 
 
-const views = ["loginView", "registerView", "usernamePromptView", "linkAccountView"];
+// Hemos quitado "registerView" de la lista de vistas
+const views = ["loginView", "usernamePromptView", "linkAccountView"];
 const show = (id) => views.forEach(v => document.getElementById(v).classList.toggle("hidden", v !== id));
 
-document.getElementById("goRegister").onclick = () => show("registerView");
-document.getElementById("goLogin").onclick = () => show("loginView");
+// Eliminado el evento onclick de goRegister porque el botón ya no existe
 document.getElementById("goLinkAccount").onclick = () => show("linkAccountView");
 document.getElementById("goBackToLogin").onclick = () => show("loginView");
 
@@ -141,7 +141,7 @@ let googleUserData = null;
 // --- FUNCIÓN PARA ENVIAR LOGS AL ADMIN (FIREBASE) ---
 const sendAdminLog = (username, action) => {
     try {
-        const logEntry = adminLogsRef.push(); // Usa push() para crear un ID único
+        const logEntry = adminLogsRef.push(); 
         logEntry.set({
             timestamp: new Date().toISOString(),
             username: username,
@@ -164,7 +164,8 @@ const showModal = (isManualRegistration, username, isLinking = false) => {
     if (isLinking) {
         successMessage.innerHTML = `🎉 ¡Éxito! Tu cuenta (**${username}**) ha sido migrada a Google.<br> Ahora inicia sesión usando el botón de Google.`;
     } else if (isManualRegistration) {
-        successMessage.innerHTML = `✅ Tu cuenta (**${username}**) ha sido creada con **éxito**.<br>💾 Tu información de acceso se descargó **automáticamente** en el archivo \`credenciales.txt\`.`;
+        // Este caso técnicamente ya no se usará, pero lo dejamos por si acaso
+        successMessage.innerHTML = `✅ Tu cuenta (**${username}**) ha sido creada con **éxito**.`;
     } else {
         successMessage.innerHTML = `✅ Has completado tu registro (**${username}**) con **Google** exitosamente.`;
     }
@@ -183,39 +184,9 @@ const hideModal = () => {
 
 closeModalBtn.onclick = hideModal;
 
-// --- FUNCION PARA DESCARGAR CREDENCIALES ---
-function descargarCredenciales(usuario, password) {
-  const fecha = new Date();
-  const contenido = `🎉 Bienvenido a SociosXIT!\n\nUsuario: ${usuario}\nContraseña: ${password}\nFecha de registro: ${fecha.toLocaleString()}\n\nPor favor, guarda este archivo en un lugar seguro...`;
-  const blob = new Blob([contenido], { type: "text/plain" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "credenciales.txt";
-  link.click();
-}
+// --- SE HA ELIMINADO LA FUNCIÓN DE DESCARGAR CREDENCIALES Y EL REGISTRO MANUAL ---
 
-// --- REGISTRO MANUAL ---
-document.getElementById("regBtn").onclick = async () => {
-  const user = regUser.value.trim();
-  const pass = regPass.value.trim();
-  if (!user || !pass) return alert("Completa todos los campos");
-
-  try {
-    const snap = await usersRef.child(user).once("value");
-    if (snap.exists()) return alert("El usuario ya existe");
-
-    await usersRef.child(user).set({ password: pass, verified: true });
-
-    descargarCredenciales(user, pass);
-    sendAdminLog(user, "New Manual Account"); // ⭐ LOG ADMIN
-    showModal(true, user); 
-  } catch (error) {
-    console.error("Error al registrar: ", error);
-    alert("Ocurrió un error al registrar: " + error.message);
-  }
-};
-
-// --- LOGIN MANUAL ---
+// --- LOGIN MANUAL (SE MANTIENE PARA USUARIOS ANTIGUOS) ---
 document.getElementById("loginBtn").onclick = async () => {
   const user = loginUser.value.trim();
   const pass = loginPass.value.trim();
@@ -377,7 +348,5 @@ document.getElementById("linkAccountBtn").onclick = async () => {
     }
 };
 
-
-// Asignar la función a los botones de Google
+// Asignar la función al botón de Google Login (el de registro ya no existe)
 document.getElementById("googleLoginBtn").onclick = signInWithGoogle;
-document.getElementById("googleRegisterBtn").onclick = signInWithGoogle;
