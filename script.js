@@ -845,3 +845,118 @@ function copiarKey(text) {
 
 // show publications by default
 showTab("pubs");
+
+// =================================================================
+// --- LÓGICA DEL CHAT FLOTANTE (INTEGRADO AL 100%) ---
+// =================================================================
+document.addEventListener("DOMContentLoaded", function() {
+  // Elementos del DOM del chat
+  const chatWindow = document.getElementById("chatWindow");
+  const chatToggleBtn = document.getElementById("chatToggleBtn");
+  const chatCloseBtn = document.getElementById("chatCloseBtn");
+  const chatInput = document.getElementById("chatInput");
+  const chatSendBtn = document.getElementById("chatSendBtn");
+  const chatMessages = document.getElementById("chatMessages");
+  const chatUploadBtn = document.getElementById("chatUploadBtn");
+  const chatImgInput = document.getElementById("chatImgInput");
+
+  // Verificar si existen para evitar errores si no se ha actualizado el HTML
+  if (!chatWindow || !chatToggleBtn) return;
+
+  const IMGBB_API_KEY = "f4a63b9f9af2fd112ded296694732a20";
+  // Usamos la variable 'db' que ya definiste en tu código arriba (línea 87 aprox)
+  const chatRef = db.ref("globalChat");
+
+  // Toggle Chat
+  chatToggleBtn.addEventListener("click", () => {
+    chatWindow.classList.toggle("active");
+    scrollToBottom();
+  });
+  chatCloseBtn.addEventListener("click", () => chatWindow.classList.remove("active"));
+
+  // Obtener usuario actual usando tu variable 'currentUser'
+  function getChatUser() {
+    return currentUser || "Anónimo";
+  }
+
+  // Enviar Mensaje
+  function sendMessage(text, type = "text") {
+    if (!text.trim()) return;
+
+    const username = getChatUser();
+    const newMessage = {
+      user: username,
+      content: text,
+      type: type,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    chatRef.push(newMessage);
+    chatInput.value = "";
+  }
+
+  chatSendBtn.addEventListener("click", () => sendMessage(chatInput.value));
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage(chatInput.value);
+  });
+
+  // Manejo de Imágenes (ImgBB)
+  chatUploadBtn.addEventListener("click", () => chatImgInput.click());
+
+  chatImgInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const originalBtnText = chatUploadBtn.innerHTML;
+    chatUploadBtn.innerHTML = "..."; // Loading state
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formData
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        sendMessage(data.data.url, "image");
+      } else {
+        alert("Error al subir imagen");
+      }
+    } catch (error) {
+      console.error("Error ImgBB:", error);
+      alert("Error de conexión con ImgBB");
+    } finally {
+      chatUploadBtn.innerHTML = originalBtnText;
+      chatImgInput.value = "";
+    }
+  });
+
+  // Escuchar Mensajes
+  chatRef.limitToLast(50).on("child_added", (snapshot) => {
+    const data = snapshot.val();
+    const isMe = data.user === getChatUser();
+
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message ${isMe ? "self" : "other"}`;
+
+    let contentHtml = "";
+    if (data.type === "image") {
+      contentHtml = `<span class="msg-user">${data.user}</span><a href="${data.content}" target="_blank"><img src="${data.content}" class="msg-img" alt="imagen" style="max-width:100%;border-radius:8px;margin-top:5px;border:1px solid rgba(255,255,255,0.2);"></a>`;
+    } else {
+      // Sanitizar texto
+      const safeText = data.content ? data.content.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+      contentHtml = `<span class="msg-user">${data.user}</span>${safeText}`;
+    }
+
+    msgDiv.innerHTML = contentHtml;
+    chatMessages.appendChild(msgDiv);
+    scrollToBottom();
+  });
+
+  function scrollToBottom() {
+    if(chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+});
