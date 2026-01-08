@@ -33,16 +33,13 @@
 
   function draw(){
     ctx.clearRect(0,0,w,h);
-    // subtle background radial gradient for depth
     const g = ctx.createLinearGradient(0,0,w,h);
     g.addColorStop(0, 'rgba(10,8,20,0.0)');
     g.addColorStop(1, 'rgba(6,4,12,0.12)');
     ctx.fillStyle = g;
     ctx.fillRect(0,0,w,h);
 
-    // draw particles
     for(let p of particles){
-      // move
       p.x += p.vx;
       p.y += p.vy;
       p.life--;
@@ -56,7 +53,6 @@
         p.y = rand(0,h);
       }
 
-      // glow
       ctx.beginPath();
       const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.glow);
       grd.addColorStop(0, p.hue);
@@ -68,7 +64,6 @@
       ctx.fill();
     }
 
-    // connect close particles gently
     ctx.lineWidth = 0.6;
     for(let i=0;i<particles.length;i++){
       for(let j=i+1;j<particles.length && j<i+4;j++){
@@ -85,16 +80,14 @@
         }
       }
     }
-
     requestAnimationFrame(draw);
   }
   resize();
   draw();
 })();
 
-/* ===================== REST OF APP (YOUR LOGIC + NEW LEVEL LOGIC) ===================== */
+/* ===================== REST OF APP ===================== */
 
-// --- Firebase Configuración (unchanged) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCr1-2dIqgxoXBTKYgSusnUZorUICX2Too",
   authDomain: "chatglobal-e9370.firebaseapp.com",
@@ -108,7 +101,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const pubsRef = db.ref("publications");
 
-// UI elements (existing)
 const userNameEl = document.getElementById("userName");
 const userBalanceEl = document.getElementById("userBalance");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -116,7 +108,6 @@ const publicationsContainer = document.getElementById("publicationsContainer");
 const myKeysList = document.getElementById("myKeysList");
 const myKeysContainer = document.getElementById("myKeysContainer");
 
-// menu elements (new)
 const hamburgerBtn = document.getElementById("hamburgerBtn");
 const sideMenu = document.getElementById("sideMenu");
 const menuBackdrop = document.getElementById("menuBackdrop");
@@ -126,10 +117,8 @@ const menuAvatar = document.getElementById("menuAvatar");
 const menuPublicaciones = document.getElementById("menuPublicaciones");
 const menuKeys = document.getElementById("menuKeys");
 const menuLogout = document.getElementById("menuLogout");
-// NUEVO ELEMENTO DE MENÚ
 const menuRecharge = document.getElementById("menuRecharge"); 
 
-// existing modals
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
 const confirmOk = document.getElementById("confirmOk");
@@ -138,36 +127,30 @@ const keyModal = document.getElementById("keyModal");
 const keyModalContent = document.getElementById("keyModalContent");
 const keyCopyBtn = document.getElementById("keyCopyBtn");
 const keyCloseBtn = document.getElementById("keyCloseBtn");
-// NUEVOS ELEMENTOS DEL MODAL DE RECARGA
 const rechargeModal = document.getElementById("rechargeModal");
 const rechargeAmountInput = document.getElementById("rechargeAmountInput");
 const rechargeConfirmBtn = document.getElementById("rechargeConfirmBtn");
 const rechargeCancelBtn = document.getElementById("rechargeCancelBtn");
 const rechargeError = document.getElementById("rechargeError");
 
-// NEW elements for level/progress bar
-const finalPriceDisplay = document.getElementById("finalPriceDisplay"); // Added to modal
+const finalPriceDisplay = document.getElementById("finalPriceDisplay"); 
 
-// ELEMENTS FOR MENU BAR (RENAMED to avoid conflict)
 const userLevelTextMenu = document.getElementById("userLevelTextMenu");
 const levelProgressTextMenu = document.getElementById("levelProgressTextMenu");
 const levelProgressBarMenu = document.getElementById("levelProgressBarMenu");
 const levelNextGoalMenu = document.getElementById("levelNextGoalMenu");
 
-// ELEMENTS FOR MAIN BAR (NEW IDs)
 const userLevelTextMain = document.getElementById("userLevelTextMain");
 const levelProgressTextMain = document.getElementById("levelProgressTextMain");
 const levelProgressBarMain = document.getElementById("levelProgressBarMain");
 const levelNextGoalMain = document.getElementById("levelNextGoalMain");
 
-
-// Tabs (existing)
 const tabPublicaciones = document.getElementById("tabPublicaciones");
 const tabKeys = document.getElementById("tabKeys");
 
-// --- Tabs functions (unchanged) ---
 tabPublicaciones.onclick = () => showTab("pubs");
 tabKeys.onclick = () => showTab("keys");
+
 function showTab(tab) {
   if (tab === "pubs") {
     publicationsContainer.classList.remove("hidden");
@@ -182,15 +165,13 @@ function showTab(tab) {
   }
 }
 
-// --- Session (unchanged) ---
 const currentUser = sessionStorage.getItem("sociosxit_user");
 if (!currentUser) window.location.href = "index.html";
 else {
   userNameEl.textContent = currentUser;
   loadUserBalance(currentUser);
   loadUserPurchases(currentUser);
-  loadUserSpendingAndLevel(currentUser); // NEW: Load spending and level
-  // also set menu values
+  loadUserSpendingAndLevel(currentUser);
   menuUserName.textContent = currentUser;
   menuAvatar.textContent = String(currentUser).charAt(0)?.toUpperCase() || "U";
 }
@@ -200,14 +181,12 @@ logoutBtn.onclick = () => {
   window.location.href = "index.html";
 };
 
-// menu interactions (open from RIGHT)
 function openMenu() {
   sideMenu.classList.add("open");
   menuBackdrop.style.display = "block";
   setTimeout(()=> menuBackdrop.style.opacity = "1", 10);
   hamburgerBtn.classList.add("open");
   sideMenu.setAttribute("aria-hidden", "false");
-  // menuUserBalance updated by loadUserBalance listener
 }
 function closeMenu() {
   sideMenu.classList.remove("open");
@@ -222,20 +201,16 @@ hamburgerBtn.addEventListener("click", ()=> {
   else openMenu();
 });
 
-// close when clicking backdrop
 menuBackdrop.addEventListener("click", closeMenu);
 
-// change hamburger into X on scroll (as requested) - style only
 window.addEventListener("scroll", () => {
   const px = window.scrollY || document.documentElement.scrollTop;
   if (px > 20) hamburgerBtn.classList.add("open");
   else {
-    // don't remove open if menu is open
     if (!sideMenu.classList.contains("open")) hamburgerBtn.classList.remove("open");
   }
 });
 
-// menu item behavior (navigate tabs + close)
 menuPublicaciones.addEventListener("click", ()=> { showTab("pubs"); closeMenu(); });
 menuKeys.addEventListener("click", ()=> { showTab("keys"); closeMenu(); });
 menuLogout.addEventListener("click", ()=> {
@@ -243,54 +218,35 @@ menuLogout.addEventListener("click", ()=> {
   window.location.href = "index.html";
 });
 
-// =================================================================
-// --- LÓGICA DE RECARGA DE SALDO (NUEVO) ---
-// =================================================================
-
-// Abrir modal de recarga
+// --- RECARGA ---
 menuRecharge.addEventListener("click", ()=> { 
-  closeMenu(); // Cierra el menú lateral
+  closeMenu(); 
   rechargeModal.style.display = "flex";
-  rechargeAmountInput.value = ""; // Limpia el input
+  rechargeAmountInput.value = ""; 
   rechargeError.classList.add("hidden");
 });
 
-// Cerrar modal de recarga
 rechargeCancelBtn.addEventListener("click", ()=> { 
   rechargeModal.style.display = "none";
 });
 
-// Lógica de recarga (redirección a WhatsApp)
 rechargeConfirmBtn.addEventListener("click", ()=> { 
   const amount = parseFloat(rechargeAmountInput.value);
   const minAmount = 4.00;
   const whatsappNumber = "+573142369516";
-
   if (isNaN(amount) || amount < minAmount) {
     rechargeError.classList.remove("hidden");
     return;
   }
-  
   rechargeError.classList.add("hidden");
   rechargeModal.style.display = "none";
-  
-  // Formatear mensaje para URL
   const message = `Hola quiero recargar ${amount.toFixed(2)} USD en la pagina de socios`;
   const encodedMessage = encodeURIComponent(message);
-  
-  // Crear URL de WhatsApp
   const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-  
-  // Redirigir
   window.open(whatsappURL, '_blank');
 });
 
-// =================================================================
-// --- FIN LÓGICA DE RECARGA ---
-// =================================================================
-
-
-// --- Publicaciones (MODIFICADO PARA ORDENAR POR VENTAS) ---
+// --- PUBLICACIONES ---
 pubsRef.on("value", (snapshot) => {
   publicationsContainer.innerHTML = "";
   const data = snapshot.val();
@@ -298,61 +254,38 @@ pubsRef.on("value", (snapshot) => {
     publicationsContainer.innerHTML = "<p>No hay publicaciones disponibles.</p>";
     return;
   }
-  
-  // 1. Convertir el objeto de datos a un array
   const pubsArray = Object.keys(data).map(key => {
-    return {
-      id: key,
-      ...data[key]
-    };
+    return { id: key, ...data[key] };
   });
-
-  // 2. Ordenar el array: Los que tengan mayor 'buyCount' van primero
-  pubsArray.sort((a, b) => {
-    const salesA = a.buyCount || 0; // Si no existe, es 0
-    const salesB = b.buyCount || 0;
-    return salesB - salesA; // Orden descendente (Mayor a menor)
-  });
-
-  // 3. Renderizar en el orden correcto
+  pubsArray.sort((a, b) => (b.buyCount || 0) - (a.buyCount || 0));
   pubsArray.forEach(pub => {
-    // Usamos appendChild porque el array ya está ordenado del mejor al peor
     publicationsContainer.appendChild(createPublicationElement(pub, pub.id));
   });
 });
 
-// create publication card (keeps your exact design)
 function createPublicationElement(pub, key) {
   const div = document.createElement("div");
   div.className = "card rounded-xl overflow-hidden shadow-lg p-5";
-
   let mediaHTML = "";
   if (pub.mediaUrl) {
     if (pub.mediaUrl.includes("youtube.com") || pub.mediaUrl.includes("youtu.be")) {
       const videoId = pub.mediaUrl.split('v=')[1] || pub.mediaUrl.split('/').pop();
-      mediaHTML = `
-        <div class="aspect-w-16 aspect-h-9 mb-4">
-          <iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen class="w-full h-full rounded-lg"></iframe>
-        </div>`;
+      mediaHTML = `<div class="aspect-w-16 aspect-h-9 mb-4"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="w-full h-full rounded-lg"></iframe></div>`;
     } else {
       mediaHTML = `<img src="${pub.mediaUrl}" alt="${pub.title}" class="w-full h-48 object-cover rounded-lg mb-4">`;
     }
   }
 
-  // buttons area: transform the info block into a clickable buy button
   let buttonsHTML = "";
   if (pub.buttons) {
     Object.keys(pub.buttons).forEach(btnKey => {
       const btn = pub.buttons[btnKey];
-      // price as decimal with two places
       const priceNum = parseFloat(btn.price || 0);
       const price = Number.isFinite(priceNum) ? priceNum.toFixed(2) : "0.00";
       const duration = btn.duration || (btn.days ? `${btn.days} días` : "");
       const keysCount = countKeys(btn.keys);
-
-      // safe id for DOM
       const safeBtnId = String(btnKey).replace(/\W/g, "_");
-      // onclick will open confirm modal and pass publish id + btnKey
+
       buttonsHTML += `
         <div class="btn-buy neon-btn p-4 rounded-lg text-center transition-transform hover:scale-105 cursor-pointer mb-3">
           <button onclick="openConfirmModal('${key}','${safeBtnId}', ${priceNum}, '${btnKey}')" class="w-full text-left">
@@ -360,11 +293,9 @@ function createPublicationElement(pub, key) {
               <div>
                 <div class="text-2xl font-bold text-neon-cyan">$${price}</div>
                 <div class="text-sm font-semibold text-neon-pink">${duration || '—'}</div>
-                <div class="text-xs small-muted mt-1">🔑 ${keysCount} claves disponibles</div>
+                <div class="text-xs small-muted mt-1">🔑 ${keysCount} disponibles</div>
               </div>
-              <div>
-                <div class="py-2 px-3 rounded-full bg-white text-blue-900 font-bold">Comprar</div>
-              </div>
+              <div><div class="py-2 px-3 rounded-full bg-white text-blue-900 font-bold">Comprar</div></div>
             </div>
           </button>
         </div>`;
@@ -375,7 +306,7 @@ function createPublicationElement(pub, key) {
     ${mediaHTML}
     <h2 class="text-2xl font-bold mb-3 text-neon-pink">${pub.title}</h2>
     <button class="btn-show neon-btn w-full py-2 rounded-lg font-semibold mb-3" onclick="toggleDetails('${key}')">Mostrar Opciones</button>
-    <div id="details-${key}" class="hidden mt-4 space-y-3">${buttonsHTML || "<p class='text-gray-400'>Sin botones disponibles</p>"}</div>
+    <div id="details-${key}" class="hidden mt-4 space-y-3">${buttonsHTML || "<p>Sin opciones</p>"}</div>
   `;
   return div;
 }
@@ -385,123 +316,70 @@ function toggleDetails(key) {
   if (el) el.classList.toggle("hidden");
 }
 
-// --- Helpers for keys parsing + counting (unchanged) ---
 function countKeys(keysField) {
   if (!keysField) return 0;
   if (Array.isArray(keysField)) return keysField.length;
-  if (typeof keysField === "string") {
-    return keysField.split(",").map(s => s.trim()).filter(Boolean).length;
-  }
+  if (typeof keysField === "string") return keysField.split(",").map(s => s.trim()).filter(Boolean).length;
   return 0;
 }
 
 function parseKeysField(keysField) {
-  // returns array of objects: { key: "...", usada: false }
   if (!keysField) return [];
   if (Array.isArray(keysField)) {
     return keysField.map(k => {
       if (typeof k === "string") {
-        const raw = k.trim();
-        const m = raw.match(/key\s*:\s*(.+)/i);
-        const v = m ? m[1].trim() : raw;
+        const v = k.match(/key\s*:\s*(.+)/i) ? k.match(/key\s*:\s*(.+)/i)[1].trim() : k.trim();
         return { key: v, usada: false };
-      } else if (typeof k === "object" && k.key) {
-        return { key: String(k.key).trim(), usada: !!k.usada };
-      } else return null;
+      } else if (typeof k === "object" && k.key) return { key: String(k.key).trim(), usada: !!k.usada };
+      return null;
     }).filter(Boolean);
   }
   if (typeof keysField === "string") {
-    const parts = keysField.split(",").map(s => s.trim()).filter(Boolean);
-    return parts.map(p => {
-      const m = p.match(/key\s*:\s*(.+)/i);
-      const v = m ? m[1].trim() : p;
+    return keysField.split(",").map(s => s.trim()).filter(Boolean).map(p => {
+      const v = p.match(/key\s*:\s*(.+)/i) ? p.match(/key\s*:\s*(.+)/i)[1].trim() : p;
       return { key: v, usada: false };
     });
   }
   return [];
 }
 
-// write keys back preserving original type (string => string, array => array of objects)
 async function updateKeysField(pubId, btnKeyIdentifier, originalBtn, newKeysArr) {
-  // fetch current publication to avoid clobbering concurrent edits
   const pubSnap = await db.ref(`publications/${pubId}`).once("value");
   const pub = pubSnap.val();
   if (!pub) return;
-
-  // determine where btn is located
-  if (Array.isArray(pub.buttons)) {
-    const idx = Number(btnKeyIdentifier);
-    if (!Number.isFinite(idx)) return;
-    if (typeof originalBtn.keys === "string") {
-      const s = newKeysArr.map(k => `key: ${k.key}`).join(", ");
-      await db.ref(`publications/${pubId}/buttons/${idx}/keys`).set(s);
-    } else {
-      const arr = newKeysArr.map(k => ({ key: k.key, usada: !!k.usada }));
-      await db.ref(`publications/${pubId}/buttons/${idx}/keys`).set(arr);
-    }
+  const targetPath = Array.isArray(pub.buttons) ? `publications/${pubId}/buttons/${btnKeyIdentifier}/keys` : `publications/${pubId}/buttons/${btnKeyIdentifier}/keys`;
+  
+  if (typeof originalBtn.keys === "string") {
+    const s = newKeysArr.map(k => `key: ${k.key}`).join(", ");
+    await db.ref(targetPath).set(s);
   } else {
-    const prop = btnKeyIdentifier;
-    if (!pub.buttons || !pub.buttons[prop]) return;
-    if (typeof originalBtn.keys === "string") {
-      const s = newKeysArr.map(k => `key: ${k.key}`).join(", ");
-      await db.ref(`publications/${pubId}/buttons/${prop}/keys`).set(s);
-    } else {
-      const arr = newKeysArr.map(k => ({ key: k.key, usada: !!k.usada }));
-      await db.ref(`publications/${pubId}/buttons/${prop}/keys`).set(arr);
-    }
+    const arr = newKeysArr.map(k => ({ key: k.key, usada: !!k.usada }));
+    await db.ref(targetPath).set(arr);
   }
 }
 
-
-// --- NUEVO: Level and Discount Logic (MODIFICADO PARA ADMIN) ---
+// --- NIVEL Y DESCUENTOS (ADMIN CONTROLLED) ---
 const LEVEL_VIP_SPEND = 50;
 const LEVEL_PREMIUM_SPEND = 150;
 let userTotalSpending = 0; 
 
 function calculateLevel(spending) {
     if (spending >= LEVEL_PREMIUM_SPEND) {
-        return {
-            level: "Premium",
-            nextGoal: LEVEL_PREMIUM_SPEND,
-            goalLabel: "¡Nivel Máximo!",
-            progressColor: "var(--level-premium)"
-        };
+        return { level: "Premium", nextGoal: LEVEL_PREMIUM_SPEND, goalLabel: "¡Nivel Máximo!", progressColor: "var(--level-premium)" };
     } else if (spending >= LEVEL_VIP_SPEND) {
-        return {
-            level: "VIP",
-            nextGoal: LEVEL_PREMIUM_SPEND,
-            goalLabel: `Próx. nivel (Premium): $${LEVEL_PREMIUM_SPEND.toFixed(2)}`,
-            progressColor: "var(--level-vip)"
-        };
+        return { level: "VIP", nextGoal: LEVEL_PREMIUM_SPEND, goalLabel: `Meta Premium: $${LEVEL_PREMIUM_SPEND.toFixed(2)}`, progressColor: "var(--level-vip)" };
     } else {
-        return {
-            level: "Base",
-            nextGoal: LEVEL_VIP_SPEND,
-            goalLabel: `Próx. nivel (VIP): $${LEVEL_VIP_SPEND.toFixed(2)}`,
-            progressColor: "var(--level-base)"
-        };
+        return { level: "Base", nextGoal: LEVEL_VIP_SPEND, goalLabel: `Meta VIP: $${LEVEL_VIP_SPEND.toFixed(2)}`, progressColor: "var(--level-base)" };
     }
 }
 
 function updateLevelUI(spending) {
     const { level, nextGoal, goalLabel, progressColor } = calculateLevel(spending);
     userTotalSpending = spending; 
-
     const bars = [
-        {
-            userLevelText: userLevelTextMenu,
-            levelProgressText: levelProgressTextMenu,
-            levelProgressBar: levelProgressBarMenu,
-            levelNextGoal: levelNextGoalMenu
-        },
-        {
-            userLevelText: userLevelTextMain,
-            levelProgressText: levelProgressTextMain,
-            levelProgressBar: levelProgressBarMain,
-            levelNextGoal: levelNextGoalMain
-        }
+        { userLevelText: userLevelTextMenu, levelProgressText: levelProgressTextMenu, levelProgressBar: levelProgressBarMenu, levelNextGoal: levelNextGoalMenu },
+        { userLevelText: userLevelTextMain, levelProgressText: levelProgressTextMain, levelProgressBar: levelProgressBarMain, levelNextGoal: levelNextGoalMain }
     ];
-
     bars.forEach(bar => {
         if (!bar.userLevelText) return;
         bar.userLevelText.textContent = `Nivel: ${level}`;
@@ -516,66 +394,52 @@ function updateLevelUI(spending) {
 
 function loadUserSpendingAndLevel(email) {
     const userKey = sanitizeEmail(email);
-    const purchasesRef = db.ref(`users/${userKey}/purchases`);
-    purchasesRef.on("value", snap => {
-        const purchases = snap.val();
+    db.ref(`users/${userKey}/purchases`).on("value", snap => {
         let totalSpent = 0;
-        if (purchases) {
-            Object.values(purchases).forEach(p => {
-                totalSpent += parseFloat(p.price || 0);
-            });
-        }
+        snap.forEach(p => { totalSpent += parseFloat(p.val().price || 0); });
         updateLevelUI(totalSpent);
     });
 }
 
-// --- Confirm modal flow (MODIFICADO PARA DESCUENTO POR ADMIN) ---
+// --- MODAL CONFIRMACION (DINAMICO DESDE ADMIN) ---
 let _pendingPurchase = null; 
 
 async function openConfirmModal(pubId, safeBtnId, price, rawBtnId) {
-    // 1. Obtener datos actuales del botón desde Firebase para leer el descuento del admin
+    // 1. Obtener la data actual del botón directamente desde Firebase
     const pubSnap = await db.ref(`publications/${pubId}`).once("value");
     const pub = pubSnap.val();
     const btn = Array.isArray(pub.buttons) ? pub.buttons[Number(rawBtnId)] : pub.buttons[rawBtnId];
 
-    // 2. Determinar rango actual
+    // 2. Determinar rango y buscar descuento configurado por el admin para esta key
     const { level } = calculateLevel(userTotalSpending);
     
-    // 3. Aplicar descuento manual configurado en el Panel Admin para este botón
+    // Aquí el sistema lee lo que pusiste en el Admin: discountVIP o discountPremium
     let discountAmount = 0;
     if (level === "VIP") {
-        discountAmount = parseFloat(btn.discountVIP || 0); // El admin pone cuánto descuenta (ej: 0.50)
+        discountAmount = parseFloat(btn.discountVIP || 0); // Ej: 0.50
     } else if (level === "Premium") {
-        discountAmount = parseFloat(btn.discountPremium || 0); // El admin pone cuánto descuenta (ej: 1.00)
+        discountAmount = parseFloat(btn.discountPremium || 0); // Ej: 1.00
     }
 
     const finalPrice = Math.max(0, price - discountAmount);
 
     confirmModal.style.display = "flex";
-    confirmText.textContent = `¿Deseas comprar esta key? Precio base: $${Number(price).toFixed(2)} USD`;
+    confirmText.textContent = `¿Comprar key? Precio: $${Number(price).toFixed(2)} USD`;
 
     if (discountAmount > 0) {
         finalPriceDisplay.innerHTML = `
-            <span class="text-xl font-bold text-neon-green">
-                Precio Final: $${finalPrice.toFixed(2)} USD
-            </span>
-            <span class="text-sm text-neon-cyan ml-2">
-                (-$${discountAmount.toFixed(2)} Desc. ${level})
-            </span>
+            <span class="text-xl font-bold text-neon-green">Final: $${finalPrice.toFixed(2)} USD</span>
+            <span class="text-sm text-neon-cyan ml-2">(-$${discountAmount.toFixed(2)} Desc. ${level})</span>
         `;
     } else {
-        finalPriceDisplay.textContent = `Precio Final: $${finalPrice.toFixed(2)} USD`;
-        finalPriceDisplay.classList.remove("text-neon-green");
-        finalPriceDisplay.classList.add("text-neon-yellow");
+        finalPriceDisplay.textContent = `Final: $${finalPrice.toFixed(2)} USD`;
+        finalPriceDisplay.className = "text-neon-yellow";
     }
 
-    _pendingPurchase = { pubId, safeBtnId, price: Number(price), rawBtnId, finalPrice: finalPrice, discountAmount: discountAmount };
+    _pendingPurchase = { pubId, safeBtnId, price, rawBtnId, finalPrice, discountAmount };
 }
 
-confirmCancel.onclick = () => {
-  confirmModal.style.display = "none";
-  _pendingPurchase = null;
-};
+confirmCancel.onclick = () => { confirmModal.style.display = "none"; _pendingPurchase = null; };
 confirmOk.onclick = async () => {
   if (!_pendingPurchase) return;
   confirmModal.style.display = "none";
@@ -583,20 +447,15 @@ confirmOk.onclick = async () => {
   _pendingPurchase = null;
 };
 
-
-// --- Main purchase function ---
+// --- COMPRA FINAL ---
 async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice, discountAmount) {
   try {
-    const email = currentUser;
-    const userKey = sanitizeEmail(email);
+    const userKey = sanitizeEmail(currentUser);
     const userRef = db.ref(`users/${userKey}`);
-
     const balSnap = await userRef.child("balance").once("value");
     let balance = parseFloat(balSnap.val() || 0);
-    if (balance < finalPrice) {
-      alert("⚠️ No tienes saldo suficiente.");
-      return;
-    }
+
+    if (balance < finalPrice) { alert("⚠️ Saldo insuficiente."); return; }
 
     const pubSnap = await db.ref(`publications/${pubId}`).once("value");
     const pub = pubSnap.val();
@@ -604,122 +463,53 @@ async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice,
     let originalBtn = pub.buttons[btnIndexOrKey];
 
     const keysArr = parseKeysField(originalBtn.keys);
-    if (!keysArr.length) { alert("❌ Sin stock."); return; }
+    if (!keysArr.length) { alert("❌ Sin claves."); return; }
     const selected = keysArr.shift();
 
-    // Actualizar balance
-    const newBalance = (balance - finalPrice);
-    await userRef.child("balance").set(Number(newBalance.toFixed(2)));
-
-    // Actualizar keys
+    // Actualizar base de datos
+    await userRef.child("balance").set(Number((balance - finalPrice).toFixed(2)));
     await updateKeysField(pubId, btnIndexOrKey, originalBtn, keysArr);
 
-    // Guardar compra
     await userRef.child("purchases").push().set({
-      pubId, title: pub.title || "",
-      optionText: originalBtn.text || originalBtn.option || "",
-      key: selected.key,
-      price: Number(finalPrice),
-      originalPrice: Number(originalPrice),
-      discountApplied: Number(discountAmount).toFixed(2),
-      date: new Date().toISOString()
+      pubId, title: pub.title, optionText: originalBtn.text || originalBtn.option,
+      key: selected.key, price: Number(finalPrice), originalPrice: Number(originalPrice),
+      discountApplied: Number(discountAmount).toFixed(2), date: new Date().toISOString()
     });
     
-    // Incrementar ventas
-    await db.ref(`publications/${pubId}/buyCount`).transaction((current) => (current || 0) + 1);
+    await db.ref(`publications/${pubId}/buyCount`).transaction(c => (c || 0) + 1);
 
-    // Mostrar modal con key
     keyModalContent.innerHTML = `<div class="mono text-green-300 font-semibold p-2">${selected.key}</div>`;
     keyModal.style.display = "flex";
     keyCopyBtn.onclick = () => { navigator.clipboard.writeText(selected.key); alert("🔑 Copiado."); };
     keyCloseBtn.onclick = () => { keyModal.style.display = "none"; };
+    userBalanceEl.textContent = `$${Number(balance - finalPrice).toFixed(2)}`;
 
-    userBalanceEl.textContent = `$${Number(newBalance).toFixed(2)}`;
-
-  } catch (err) {
-    alert("Error al procesar compra.");
-  }
+  } catch (err) { alert("Error en compra."); }
 }
 
-// --- sanitize email ---
-function sanitizeEmail(email) {
-  return email.replace(/\./g, "_");
-}
+function sanitizeEmail(email) { return email.replace(/\./g, "_"); }
 
-// --- load user balance ---
 function loadUserBalance(email) {
-  const userKey = sanitizeEmail(email);
-  db.ref(`users/${userKey}/balance`).on("value", snap => {
-    const balance = parseFloat(snap.val() || 0) || 0;
-    const formatted = `$${Number(balance).toFixed(2)}`;
-    userBalanceEl.textContent = formatted;
-    menuUserBalance.textContent = `Saldo: ${formatted}`;
+  db.ref(`users/${sanitizeEmail(email)}/balance`).on("value", snap => {
+    const b = parseFloat(snap.val() || 0);
+    userBalanceEl.textContent = `$${b.toFixed(2)}`;
+    menuUserBalance.textContent = `Saldo: $${b.toFixed(2)}`;
   });
 }
 
-// --- Historial (Mis Keys) ---
 function loadUserPurchases(email) {
-  const userKey = sanitizeEmail(email);
-  const purchasesRef = db.ref(`users/${userKey}/purchases`);
-  const searchInput = document.getElementById("searchKeyInput");
-  const filterSelect = document.getElementById("filterDateSelect");
-  let allPurchases = [];
-
-  purchasesRef.on("value", (snapshot) => {
-    const data = snapshot.val();
-    if (!data) {
-      myKeysList.innerHTML = "<p class='small-muted'>No has comprado claves aún.</p>";
-      allPurchases = [];
-      return;
-    }
-    allPurchases = Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse();
-    renderPurchases();
-  });
-
-  function renderPurchases() {
-    const term = (searchInput.value || "").toLowerCase();
-    const filter = filterSelect.value;
-    const now = new Date();
+  db.ref(`users/${sanitizeEmail(email)}/purchases`).on("value", snap => {
     myKeysList.innerHTML = "";
-
-    const filtered = allPurchases.filter(it => {
-      const title = (it.title || "").toLowerCase();
-      const keyVal = (it.key || "").toLowerCase();
-      const matchTerm = !term || title.includes(term) || keyVal.includes(term);
-      const date = new Date(it.date);
-      const diffDays = (now - date) / (1000 * 60 * 60 * 24);
-      let matchDate = true;
-      if (filter === "today") matchDate = diffDays < 1;
-      else if (filter === "7days") matchDate = diffDays <= 7;
-      else if (filter === "month") matchDate = date.getMonth() === now.getMonth();
-      return matchTerm && matchDate;
-    });
-
-    filtered.forEach(it => {
+    const data = snap.val();
+    if (!data) return;
+    Object.keys(data).reverse().forEach(k => {
+      const it = data[k];
       const div = document.createElement("div");
-      div.className = "card rounded-lg p-4 mb-3";
-      const finalPrice = parseFloat(it.price || 0).toFixed(2);
-      div.innerHTML = `
-        <div class="flex justify-between items-center">
-          <div>
-            <div class="text-lg font-semibold">${it.title}</div>
-            <div class="small-muted">${it.optionText}</div>
-          </div>
-          <div class="text-right">
-            <div class="font-bold text-green-400">$${finalPrice}</div>
-            <div class="mono text-sm text-green-300">${it.key}</div>
-            <button class="bg-white text-blue-900 font-bold px-2 rounded text-xs" onclick="copiarKey('${it.key}')">Copiar</button>
-          </div>
-        </div>`;
+      div.className = "card rounded-lg p-4 mb-2";
+      div.innerHTML = `<div class="flex justify-between"><div><b>${it.title}</b><br>${it.optionText}</div><div class="text-right text-green-400 font-bold">$${it.price.toFixed(2)}<br><small>${it.key}</small></div></div>`;
       myKeysList.appendChild(div);
     });
-  }
-  searchInput.oninput = renderPurchases;
-  filterSelect.onchange = renderPurchases;
-}
-
-function copiarKey(text) {
-  navigator.clipboard.writeText(text).then(() => alert("🔑 Copiado."));
+  });
 }
 
 showTab("pubs");
