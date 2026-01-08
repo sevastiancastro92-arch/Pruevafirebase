@@ -10,7 +10,7 @@
     'rgba(255,212,96,0.95)'
   ];
   const particles = [];
-  const PARTICLE_COUNT = Math.floor((w*h) / 80000) + 30; // scaled by screen
+  const PARTICLE_COUNT = Math.floor((w*h) / 80000) + 30;
   function rand(min,max){return Math.random()*(max-min)+min;}
   function makeParticle(){
     return {
@@ -52,7 +52,6 @@
         p.x = rand(0,w);
         p.y = rand(0,h);
       }
-
       ctx.beginPath();
       const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.glow);
       grd.addColorStop(0, p.hue);
@@ -100,13 +99,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const pubsRef = db.ref("publications");
 
-// UI elements
+// Elementos UI
 const userNameEl = document.getElementById("userName");
 const userBalanceEl = document.getElementById("userBalance");
 const logoutBtn = document.getElementById("logoutBtn");
 const publicationsContainer = document.getElementById("publicationsContainer");
-const myKeysList = document.getElementById("myKeysList");
 const myKeysContainer = document.getElementById("myKeysContainer");
+const myKeysList = document.getElementById("myKeysList");
+
 const hamburgerBtn = document.getElementById("hamburgerBtn");
 const sideMenu = document.getElementById("sideMenu");
 const menuBackdrop = document.getElementById("menuBackdrop");
@@ -120,18 +120,20 @@ const menuRecharge = document.getElementById("menuRecharge");
 
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
+const finalPriceDisplay = document.getElementById("finalPriceDisplay");
 const confirmOk = document.getElementById("confirmOk");
 const confirmCancel = document.getElementById("confirmCancel");
+
 const keyModal = document.getElementById("keyModal");
 const keyModalContent = document.getElementById("keyModalContent");
 const keyCopyBtn = document.getElementById("keyCopyBtn");
 const keyCloseBtn = document.getElementById("keyCloseBtn");
+
 const rechargeModal = document.getElementById("rechargeModal");
 const rechargeAmountInput = document.getElementById("rechargeAmountInput");
 const rechargeConfirmBtn = document.getElementById("rechargeConfirmBtn");
 const rechargeCancelBtn = document.getElementById("rechargeCancelBtn");
 const rechargeError = document.getElementById("rechargeError");
-const finalPriceDisplay = document.getElementById("finalPriceDisplay");
 
 const userLevelTextMenu = document.getElementById("userLevelTextMenu");
 const levelProgressTextMenu = document.getElementById("levelProgressTextMenu");
@@ -146,9 +148,9 @@ const levelNextGoalMain = document.getElementById("levelNextGoalMain");
 const tabPublicaciones = document.getElementById("tabPublicaciones");
 const tabKeys = document.getElementById("tabKeys");
 
+// --- Tabs ---
 tabPublicaciones.onclick = () => showTab("pubs");
 tabKeys.onclick = () => showTab("keys");
-
 function showTab(tab) {
   if (tab === "pubs") {
     publicationsContainer.classList.remove("hidden");
@@ -163,6 +165,7 @@ function showTab(tab) {
   }
 }
 
+// --- Sesión ---
 const currentUser = sessionStorage.getItem("sociosxit_user");
 if (!currentUser) window.location.href = "index.html";
 else {
@@ -179,370 +182,235 @@ logoutBtn.onclick = () => {
   window.location.href = "index.html";
 };
 
+// --- Menú ---
 function openMenu() {
   sideMenu.classList.add("open");
   menuBackdrop.style.display = "block";
   setTimeout(()=> menuBackdrop.style.opacity = "1", 10);
   hamburgerBtn.classList.add("open");
-  sideMenu.setAttribute("aria-hidden", "false");
 }
 function closeMenu() {
   sideMenu.classList.remove("open");
   menuBackdrop.style.opacity = "0";
   hamburgerBtn.classList.remove("open");
-  sideMenu.setAttribute("aria-hidden", "true");
   setTimeout(()=> menuBackdrop.style.display = "none", 240);
 }
-
-hamburgerBtn.addEventListener("click", ()=> {
-  if (sideMenu.classList.contains("open")) closeMenu();
-  else openMenu();
-});
-
+hamburgerBtn.addEventListener("click", ()=> sideMenu.classList.contains("open") ? closeMenu() : openMenu());
 menuBackdrop.addEventListener("click", closeMenu);
-
-window.addEventListener("scroll", () => {
-  const px = window.scrollY || document.documentElement.scrollTop;
-  if (px > 20) hamburgerBtn.classList.add("open");
-  else {
-    if (!sideMenu.classList.contains("open")) hamburgerBtn.classList.remove("open");
-  }
-});
-
 menuPublicaciones.addEventListener("click", ()=> { showTab("pubs"); closeMenu(); });
 menuKeys.addEventListener("click", ()=> { showTab("keys"); closeMenu(); });
-menuLogout.addEventListener("click", ()=> {
-  sessionStorage.removeItem("sociosxit_user");
-  window.location.href = "index.html";
-});
+menuLogout.addEventListener("click", () => { sessionStorage.removeItem("sociosxit_user"); window.location.href = "index.html"; });
 
-// --- LÓGICA DE RECARGA ---
+// --- Recarga ---
 menuRecharge.addEventListener("click", ()=> { 
   closeMenu();
   rechargeModal.style.display = "flex";
   rechargeAmountInput.value = "";
   rechargeError.classList.add("hidden");
 });
-
-rechargeCancelBtn.addEventListener("click", ()=> { 
-  rechargeModal.style.display = "none";
-});
-
-rechargeConfirmBtn.addEventListener("click", ()=> { 
+rechargeCancelBtn.addEventListener("click", ()=> rechargeModal.style.display = "none");
+rechargeConfirmBtn.addEventListener("click", ()=> {
   const amount = parseFloat(rechargeAmountInput.value);
-  const minAmount = 4.00;
-  const whatsappNumber = "+573142369516";
-
-  if (isNaN(amount) || amount < minAmount) {
-    rechargeError.classList.remove("hidden");
-    return;
-  }
-  
-  rechargeError.classList.add("hidden");
+  if (isNaN(amount) || amount < 4) { rechargeError.classList.remove("hidden"); return; }
+  window.open(`https://wa.me/+573142369516?text=${encodeURIComponent('Hola quiero recargar ' + amount.toFixed(2) + ' USD en SociosXIT')}`, '_blank');
   rechargeModal.style.display = "none";
-  const message = `Hola quiero recargar ${amount.toFixed(2)} USD en la pagina de socios`;
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-  window.open(whatsappURL, '_blank');
 });
-
-// --- Publicaciones ---
-pubsRef.on("value", (snapshot) => {
-  publicationsContainer.innerHTML = "";
-  const data = snapshot.val();
-  if (!data) {
-    publicationsContainer.innerHTML = "<p>No hay publicaciones disponibles.</p>";
-    return;
-  }
-  
-  const pubsArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-  pubsArray.sort((a, b) => (b.buyCount || 0) - (a.buyCount || 0));
-
-  pubsArray.forEach(pub => {
-    publicationsContainer.appendChild(createPublicationElement(pub, pub.id));
-  });
-});
-
-function createPublicationElement(pub, key) {
-  const div = document.createElement("div");
-  div.className = "card rounded-xl overflow-hidden shadow-lg p-5";
-
-  let mediaHTML = "";
-  if (pub.mediaUrl) {
-    if (pub.mediaUrl.includes("youtube.com") || pub.mediaUrl.includes("youtu.be")) {
-      const videoId = pub.mediaUrl.split('v=')[1] || pub.mediaUrl.split('/').pop();
-      mediaHTML = `<div class="aspect-w-16 aspect-h-9 mb-4"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="w-full h-full rounded-lg"></iframe></div>`;
-    } else {
-      mediaHTML = `<img src="${pub.mediaUrl}" class="w-full h-48 object-cover rounded-lg mb-4">`;
-    }
-  }
-
-  let buttonsHTML = "";
-  if (pub.buttons) {
-    Object.keys(pub.buttons).forEach(btnKey => {
-      const btn = pub.buttons[btnKey];
-      const priceNum = parseFloat(btn.price || 0);
-      const price = Number.isFinite(priceNum) ? priceNum.toFixed(2) : "0.00";
-      const duration = btn.duration || (btn.days ? `${btn.days} días` : "");
-      const keysCount = countKeys(btn.keys);
-      const safeBtnId = String(btnKey).replace(/\W/g, "_");
-
-      buttonsHTML += `
-        <div class="btn-buy neon-btn p-4 rounded-lg text-center transition-transform hover:scale-105 cursor-pointer mb-3" 
-             onclick="openConfirmModal('${key}','${safeBtnId}', ${priceNum}, '${btnKey}')">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-2xl font-bold text-neon-cyan">$${price}</div>
-                <div class="text-sm font-semibold text-neon-pink">${duration || '—'}</div>
-                <div class="text-xs small-muted mt-1">🔑 ${keysCount} claves</div>
-              </div>
-              <div><div class="py-2 px-3 rounded-full bg-white text-blue-900 font-bold">Comprar</div></div>
-            </div>
-        </div>`;
-    });
-  }
-
-  div.innerHTML = `
-    ${mediaHTML}
-    <h2 class="text-2xl font-bold mb-3 text-neon-pink">${pub.title}</h2>
-    <button class="btn-show neon-btn w-full py-2 rounded-lg font-semibold mb-3" onclick="toggleDetails('${key}')">Mostrar Opciones</button>
-    <div id="details-${key}" class="hidden mt-4 space-y-3">${buttonsHTML || "<p>Sin botones</p>"}</div>`;
-  return div;
-}
-
-function toggleDetails(key) {
-  const el = document.getElementById(`details-${key}`);
-  if (el) el.classList.toggle("hidden");
-}
-
-function countKeys(keysField) {
-  if (!keysField) return 0;
-  if (Array.isArray(keysField)) return keysField.length;
-  if (typeof keysField === "string") return keysField.split(",").map(s => s.trim()).filter(Boolean).length;
-  return 0;
-}
-
-function parseKeysField(keysField) {
-  if (!keysField) return [];
-  if (Array.isArray(keysField)) {
-    return keysField.map(k => {
-      if (typeof k === "string") {
-        const v = k.match(/key\s*:\s*(.+)/i) ? k.match(/key\s*:\s*(.+)/i)[1].trim() : k.trim();
-        return { key: v, usada: false };
-      } else if (typeof k === "object" && k.key) return { key: String(k.key).trim(), usada: !!k.usada };
-      return null;
-    }).filter(Boolean);
-  }
-  if (typeof keysField === "string") {
-    return keysField.split(",").map(s => s.trim()).filter(Boolean).map(p => {
-      const v = p.match(/key\s*:\s*(.+)/i) ? p.match(/key\s*:\s*(.+)/i)[1].trim() : p;
-      return { key: v, usada: false };
-    });
-  }
-  return [];
-}
-
-async function updateKeysField(pubId, btnKeyIdentifier, originalBtn, newKeysArr) {
-  const pubSnap = await db.ref(`publications/${pubId}`).once("value");
-  const pub = pubSnap.val();
-  if (!pub) return;
-
-  const isArr = Array.isArray(pub.buttons);
-  const path = `publications/${pubId}/buttons/${btnKeyIdentifier}/keys`;
-  
-  if (typeof originalBtn.keys === "string") {
-    const s = newKeysArr.map(k => `key: ${k.key}`).join(", ");
-    await db.ref(path).set(s);
-  } else {
-    const arr = newKeysArr.map(k => ({ key: k.key, usada: !!k.usada }));
-    await db.ref(path).set(arr);
-  }
-}
 
 // =================================================================
-// --- LÓGICA DE NIVELES Y DESCUENTOS DINÁMICOS (ADMIN CONTROLLED) ---
+// --- LÓGICA DE NIVELES Y DESCUENTOS DESDE ADMIN ---
 // =================================================================
 
 const LEVEL_VIP_SPEND = 50;
 const LEVEL_PREMIUM_SPEND = 150;
-let userTotalSpending = 0; 
+let userTotalSpending = 0;
 
-// Determina solo el rango actual del usuario
 function calculateLevel(spending) {
-    if (spending >= LEVEL_PREMIUM_SPEND) return { level: "Premium", nextGoal: LEVEL_PREMIUM_SPEND, goalLabel: "¡Nivel Máximo!", progressColor: "var(--level-premium)" };
-    if (spending >= LEVEL_VIP_SPEND) return { level: "VIP", nextGoal: LEVEL_PREMIUM_SPEND, goalLabel: `Meta Premium: $${LEVEL_PREMIUM_SPEND}`, progressColor: "var(--level-vip)" };
-    return { level: "Base", nextGoal: LEVEL_VIP_SPEND, goalLabel: `Meta VIP: $${LEVEL_VIP_SPEND}`, progressColor: "var(--level-base)" };
+    if (spending >= LEVEL_PREMIUM_SPEND) return { level: "Premium", goalLabel: "¡Nivel Máximo!", progressColor: "var(--level-premium)" };
+    if (spending >= LEVEL_VIP_SPEND) return { level: "VIP", goalLabel: `Meta Premium: $${LEVEL_PREMIUM_SPEND}`, progressColor: "var(--level-vip)" };
+    return { level: "Base", goalLabel: `Meta VIP: $${LEVEL_VIP_SPEND}`, progressColor: "var(--level-base)" };
 }
 
 function updateLevelUI(spending) {
     const { level, goalLabel, progressColor } = calculateLevel(spending);
     userTotalSpending = spending;
     const bars = [
-        { userLevelText: userLevelTextMenu, levelProgressText: levelProgressTextMenu, levelProgressBar: levelProgressBarMenu, levelNextGoal: levelNextGoalMenu },
-        { userLevelText: userLevelTextMain, levelProgressText: levelProgressTextMain, levelProgressBar: levelProgressBarMain, levelNextGoal: levelNextGoalMain }
+        { levelText: userLevelTextMenu, progressText: levelProgressTextMenu, progressBar: levelProgressBarMenu, nextGoal: levelNextGoalMenu },
+        { levelText: userLevelTextMain, progressText: levelProgressTextMain, progressBar: levelProgressBarMain, nextGoal: levelNextGoalMain }
     ];
     bars.forEach(bar => {
-        if (!bar.userLevelText) return;
-        bar.userLevelText.textContent = `Nivel: ${level}`;
-        bar.userLevelText.className = `level-label ${level === 'VIP' ? 'level-vip-text' : level === 'Premium' ? 'level-premium-text' : ''}`;
-        bar.levelNextGoal.textContent = goalLabel;
+        if (!bar.levelText) return;
+        bar.levelText.textContent = `Nivel: ${level}`;
+        bar.nextGoal.textContent = goalLabel;
         let perc = (spending < LEVEL_VIP_SPEND) ? (spending/LEVEL_VIP_SPEND)*100 : (spending/LEVEL_PREMIUM_SPEND)*100;
-        bar.levelProgressBar.style.width = `${Math.min(perc, 100).toFixed(2)}%`;
-        bar.levelProgressBar.style.backgroundColor = progressColor;
-        bar.levelProgressText.textContent = `$${spending.toFixed(2)}`;
+        bar.progressBar.style.width = `${Math.min(perc, 100).toFixed(2)}%`;
+        bar.progressBar.style.backgroundColor = progressColor;
+        bar.progressText.textContent = `$${spending.toFixed(2)}`;
     });
 }
 
 function loadUserSpendingAndLevel(email) {
-    const userKey = sanitizeEmail(email);
-    db.ref(`users/${userKey}/purchases`).on("value", snap => {
+    db.ref(`users/${sanitizeEmail(email)}/purchases`).on("value", snap => {
         let total = 0;
         snap.forEach(p => { total += parseFloat(p.val().price || 0); });
         updateLevelUI(total);
     });
 }
 
+// --- Comprar y Confirmar ---
 let _pendingPurchase = null;
 
 async function openConfirmModal(pubId, safeBtnId, price, rawBtnId) {
-    // 1. Obtener datos actuales de la publicación/botón para leer el descuento del admin
     const pubSnap = await db.ref(`publications/${pubId}`).once("value");
     const pub = pubSnap.val();
-    const btn = Array.isArray(pub.buttons) ? pub.buttons[Number(safeBtnId)] : pub.buttons[rawBtnId];
+    const btn = Array.isArray(pub.buttons) ? pub.buttons[Number(rawBtnId)] : pub.buttons[rawBtnId];
     
-    // 2. Determinar rango y buscar el descuento configurado por el admin para este botón
     const { level } = calculateLevel(userTotalSpending);
-    let discountAmount = 0;
     
-    if (level === "VIP") {
-        // El admin debe guardar el campo 'discountVIP' en el botón (ej: 0.50 para descontar 50 centavos)
-        discountAmount = parseFloat(btn.discountVIP || 0);
-    } else if (level === "Premium") {
-        // El admin debe guardar el campo 'discountPremium'
-        discountAmount = parseFloat(btn.discountPremium || 0);
-    }
+    // DESCUENTO DIRECTO DESDE ADMIN
+    let discount = 0;
+    if (level === "VIP") discount = parseFloat(btn.discountVIP || 0);
+    else if (level === "Premium") discount = parseFloat(btn.discountPremium || 0);
 
-    const finalPrice = Math.max(0, price - discountAmount);
+    const finalPrice = Math.max(0, price - discount);
 
     confirmModal.style.display = "flex";
-    confirmText.textContent = `¿Comprar key? Precio: $${price.toFixed(2)}`;
-
-    if (discountAmount > 0) {
+    confirmText.textContent = `¿Comprar key? Precio Original: $${price.toFixed(2)}`;
+    
+    if (discount > 0) {
         finalPriceDisplay.innerHTML = `
-            <div class="text-xl font-bold text-neon-green">Final: $${finalPrice.toFixed(2)} USD</div>
-            <div class="text-xs text-neon-cyan">Ahorras $${discountAmount.toFixed(2)} por ser ${level}</div>
+            <div class="text-xl font-bold text-neon-green">Precio Final: $${finalPrice.toFixed(2)}</div>
+            <div class="text-xs text-neon-cyan">Descuento de Rango ${level}: -$${discount.toFixed(2)}</div>
         `;
     } else {
-        finalPriceDisplay.innerHTML = `<div class="text-neon-yellow">Final: $${finalPrice.toFixed(2)} USD</div>`;
+        finalPriceDisplay.innerHTML = `<div class="text-neon-yellow">Precio Final: $${finalPrice.toFixed(2)}</div>`;
     }
 
-    _pendingPurchase = { pubId, safeBtnId, price, rawBtnId, finalPrice, discountAmount };
+    _pendingPurchase = { pubId, safeBtnId, price, rawBtnId, finalPrice, discount };
 }
 
-confirmCancel.onclick = () => { confirmModal.style.display = "none"; _pendingPurchase = null; };
 confirmOk.onclick = async () => {
-  if (!_pendingPurchase) return;
-  const p = _pendingPurchase;
-  confirmModal.style.display = "none";
-  await comprarKey(p.pubId, p.safeBtnId, p.price, p.rawBtnId, p.finalPrice, p.discountAmount);
-  _pendingPurchase = null;
+    if (!_pendingPurchase) return;
+    const p = _pendingPurchase;
+    confirmModal.style.display = "none";
+    await ejecutarCompra(p.pubId, p.safeBtnId, p.price, p.rawBtnId, p.finalPrice, p.discount);
+    _pendingPurchase = null;
 };
+confirmCancel.onclick = () => confirmModal.style.display = "none";
 
-// --- Función de Compra Principal ---
-async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice, discountApplied) {
-  try {
-    const userKey = sanitizeEmail(currentUser);
-    const userRef = db.ref(`users/${userKey}`);
-    const balSnap = await userRef.child("balance").once("value");
-    let balance = parseFloat(balSnap.val() || 0);
+async function ejecutarCompra(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice, discount) {
+    try {
+        const userKey = sanitizeEmail(currentUser);
+        const userRef = db.ref(`users/${userKey}`);
+        const balSnap = await userRef.child("balance").once("value");
+        let balance = parseFloat(balSnap.val() || 0);
 
-    if (balance < finalPrice) { alert("Saldo insuficiente."); return; }
+        if (balance < finalPrice) { alert("Saldo insuficiente."); return; }
 
-    const pubSnap = await db.ref(`publications/${pubId}`).once("value");
-    const pub = pubSnap.val();
-    let originalBtn = Array.isArray(pub.buttons) ? pub.buttons[Number(safeBtnId)] : pub.buttons[rawBtnId];
+        const pubSnap = await db.ref(`publications/${pubId}`).once("value");
+        const pub = pubSnap.val();
+        const btnIndex = Array.isArray(pub.buttons) ? Number(rawBtnId) : rawBtnId;
+        const originalBtn = pub.buttons[btnIndex];
 
-    const keysArr = parseKeysField(originalBtn.keys);
-    if (!keysArr.length) { alert("No hay claves."); return; }
-    const selected = keysArr[0];
+        const keysArr = parseKeysField(originalBtn.keys);
+        if (keysArr.length === 0) { alert("No hay stock."); return; }
+        const selectedKey = keysArr.shift();
 
-    // Actualizar Balance
-    await userRef.child("balance").set(Number((balance - finalPrice).toFixed(2)));
+        // 1. Descontar Balance
+        await userRef.child("balance").set(Number((balance - finalPrice).toFixed(2)));
 
-    // Quitar Key
-    const updatedKeys = keysArr.slice();
-    updatedKeys.shift();
-    await updateKeysField(pubId, Array.isArray(pub.buttons) ? Number(safeBtnId) : rawBtnId, originalBtn, updatedKeys);
+        // 2. Actualizar Keys
+        await updateKeysField(pubId, btnIndex, originalBtn, keysArr);
 
-    // Guardar Historial
-    await userRef.child("purchases").push().set({
-      pubId, title: pub.title || "",
-      optionText: originalBtn.text || originalBtn.option || "",
-      key: selected.key,
-      price: finalPrice, 
-      originalPrice: originalPrice,
-      discountApplied: discountApplied,
-      date: new Date().toISOString()
-    });
-    
-    // Incrementar Ventas
-    await db.ref(`publications/${pubId}/buyCount`).transaction(c => (c || 0) + 1);
+        // 3. Registrar Compra
+        await userRef.child("purchases").push().set({
+            pubId, title: pub.title, optionText: originalBtn.text,
+            key: selectedKey.key, price: finalPrice, originalPrice,
+            discountApplied: discount, date: new Date().toISOString()
+        });
 
-    // Modal de éxito
-    keyModalContent.innerHTML = `<div class="mono text-green-300 font-semibold p-2">${selected.key}</div>`;
-    keyModal.style.display = "flex";
-    keyCopyBtn.onclick = () => { navigator.clipboard.writeText(selected.key); alert("Copiada"); };
-    keyCloseBtn.onclick = () => keyModal.style.display = "none";
+        // 4. Incrementar Ventas
+        await db.ref(`publications/${pubId}/buyCount`).transaction(c => (c || 0) + 1);
 
-  } catch (err) { console.error(err); alert("Error"); }
+        // 5. Mostrar Key
+        keyModalContent.innerHTML = `<div class="mono text-green-300 p-2 text-center text-xl">${selectedKey.key}</div>`;
+        keyModal.style.display = "flex";
+        keyCopyBtn.onclick = () => { navigator.clipboard.writeText(selectedKey.key); alert("Copiado"); };
+        keyCloseBtn.onclick = () => keyModal.style.display = "none";
+
+    } catch (e) { console.error(e); alert("Error en compra"); }
 }
 
-function sanitizeEmail(email) { return email.replace(/\./g, "_"); }
-
-function loadUserBalance(email) {
-  const userKey = sanitizeEmail(email);
-  db.ref(`users/${userKey}/balance`).on("value", snap => {
-    const bal = parseFloat(snap.val() || 0);
-    userBalanceEl.textContent = `$${bal.toFixed(2)}`;
-    menuUserBalance.textContent = `Saldo: $${bal.toFixed(2)}`;
-  });
-}
-
-function loadUserPurchases(email) {
-  const userKey = sanitizeEmail(email);
-  const purchasesRef = db.ref(`users/${userKey}/purchases`);
-  const searchInput = document.getElementById("searchKeyInput");
-  const filterSelect = document.getElementById("filterDateSelect");
-  let allPurchases = [];
-
-  purchasesRef.on("value", snap => {
+// --- Helpers Publicaciones ---
+pubsRef.on("value", snap => {
+    publicationsContainer.innerHTML = "";
     const data = snap.val();
-    if (!data) { myKeysList.innerHTML = "<p>Sin claves.</p>"; return; }
-    allPurchases = Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse();
-    renderPurchases();
-  });
+    if (!data) return;
+    const pubs = Object.keys(data).map(k => ({ id: k, ...data[k] })).sort((a,b) => (b.buyCount||0)-(a.buyCount||0));
+    pubs.forEach(p => publicationsContainer.appendChild(renderCard(p)));
+});
 
-  function renderPurchases() {
-    const term = (searchInput.value || "").toLowerCase();
-    myKeysList.innerHTML = "";
-    allPurchases.filter(it => (it.title||"").toLowerCase().includes(term) || (it.key||"").toLowerCase().includes(term)).forEach(it => {
-      const div = document.createElement("div");
-      div.className = "card rounded-lg p-4 mb-2";
-      div.innerHTML = `
-        <div class="flex justify-between items-center">
-            <div>
-                <div class="font-bold">${it.title}</div>
-                <div class="text-xs small-muted">${new Date(it.date).toLocaleString()}</div>
-            </div>
-            <div class="text-right">
-                <div class="text-green-400 font-bold">$${parseFloat(it.price).toFixed(2)}</div>
-                <div class="mono text-xs">${it.key}</div>
-            </div>
-        </div>`;
-      myKeysList.appendChild(div);
+function renderCard(pub) {
+    const div = document.createElement("div");
+    div.className = "card rounded-xl overflow-hidden shadow-lg p-5";
+    let btns = "";
+    if (pub.buttons) {
+        Object.keys(pub.buttons).forEach(bk => {
+            const b = pub.buttons[bk];
+            btns += `
+                <div class="btn-buy neon-btn p-4 rounded-lg cursor-pointer mb-3" onclick="openConfirmModal('${pub.id}','${bk}',${b.price},'${bk}')">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="text-2xl font-bold text-neon-cyan">$${parseFloat(b.price).toFixed(2)}</div>
+                            <div class="text-sm text-neon-pink">${b.text || b.duration}</div>
+                            <div class="text-xs small-muted mt-1">🔑 ${countKeys(b.keys)} keys</div>
+                        </div>
+                        <div class="bg-white text-blue-900 px-3 py-1 rounded-full font-bold">Comprar</div>
+                    </div>
+                </div>`;
+        });
+    }
+    div.innerHTML = `
+        <h2 class="text-2xl font-bold mb-3 text-neon-pink">${pub.title}</h2>
+        <button class="btn-show neon-btn w-full py-2 rounded-lg font-semibold mb-3" onclick="toggleDetails('${pub.id}')">Mostrar Opciones</button>
+        <div id="details-${pub.id}" class="hidden mt-4">${btns}</div>`;
+    return div;
+}
+
+function toggleDetails(id) { document.getElementById(`details-${id}`).classList.toggle("hidden"); }
+function sanitizeEmail(e) { return e.replace(/\./g, "_"); }
+function loadUserBalance(e) { db.ref(`users/${sanitizeEmail(e)}/balance`).on("value", s => {
+    const b = parseFloat(s.val()||0);
+    userBalanceEl.textContent = `$${b.toFixed(2)}`;
+    menuUserBalance.textContent = `Saldo: $${b.toFixed(2)}`;
+});}
+function countKeys(k) { if(!k) return 0; return Array.isArray(k) ? k.length : k.split(',').length; }
+function parseKeysField(f) { 
+    if(!f) return [];
+    let raw = Array.isArray(f) ? f : f.split(',').map(s=>s.trim());
+    return raw.map(x => {
+        let v = typeof x === 'string' ? (x.match(/key\s*:\s*(.+)/i) ? x.match(/key\s*:\s*(.+)/i)[1] : x) : x.key;
+        return { key: String(v).trim(), usada: false };
     });
-  }
-  searchInput.oninput = renderPurchases;
+}
+async function updateKeysField(id, bk, btn, keys) {
+    const path = `publications/${id}/buttons/${bk}/keys`;
+    const data = typeof btn.keys === 'string' ? keys.map(k=>`key: ${k.key}`).join(', ') : keys;
+    await db.ref(path).set(data);
+}
+
+function loadUserPurchases(e) {
+    db.ref(`users/${sanitizeEmail(e)}/purchases`).on("value", snap => {
+        myKeysList.innerHTML = "";
+        const data = snap.val();
+        if(!data) { myKeysList.innerHTML = "<p>Sin compras.</p>"; return; }
+        Object.values(data).reverse().forEach(p => {
+            const d = document.createElement("div");
+            d.className = "card rounded-lg p-4 mb-3 flex justify-between items-center";
+            d.innerHTML = `<div><div class="font-bold">${p.title}</div><div class="text-xs small-muted">${p.optionText}</div></div>
+                           <div class="text-right"><div class="text-green-400 font-bold">$${p.price.toFixed(2)}</div><div class="mono text-xs">${p.key}</div></div>`;
+            myKeysList.appendChild(d);
+        });
+    });
 }
 
 showTab("pubs");
