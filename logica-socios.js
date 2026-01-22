@@ -1,118 +1,23 @@
-// Configuración de Particles.js
+// --- CONFIGURACIÓN PARTICLES.JS ---
 particlesJS("particles-js", {
   "particles": {
-    "number": {
-      "value": 80,
-      "density": {
-        "enable": true,
-        "value_area": 800
-      }
-    },
-    "color": {
-      "value": ["#ff006e", "#8338ec", "#3a86ff"] /* Colores neón para las partículas */
-    },
-    "shape": {
-      "type": "circle",
-      "stroke": {
-        "width": 0,
-        "color": "#000000"
-      },
-      "polygon": {
-        "nb_sides": 5
-      },
-      "image": {
-        "src": "img/github.svg",
-        "width": 100,
-        "height": 100
-      }
-    },
-    "opacity": {
-      "value": 0.5,
-      "random": false,
-      "anim": {
-        "enable": false,
-        "speed": 1,
-        "opacity_min": 0.1,
-        "sync": false
-      }
-    },
-    "size": {
-      "value": 3,
-      "random": true,
-      "anim": {
-        "enable": false,
-        "speed": 40,
-        "size_min": 0.1,
-        "sync": false
-      }
-    },
-    "line_linked": {
-      "enable": true,
-      "distance": 150,
-      "color": "#8338ec", /* Color neón para las líneas */
-      "opacity": 0.4,
-      "width": 1
-    },
-    "move": {
-      "enable": true,
-      "speed": 2,
-      "direction": "none",
-      "random": false,
-      "straight": false,
-      "out_mode": "out",
-      "bounce": false,
-      "attract": {
-        "enable": false,
-        "rotateX": 600,
-        "rotateY": 1200
-      }
-    }
+    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+    "color": { "value": ["#ff006e", "#8338ec", "#3a86ff"] },
+    "shape": { "type": "circle" },
+    "opacity": { "value": 0.5 },
+    "size": { "value": 3, "random": true },
+    "line_linked": { "enable": true, "distance": 150, "color": "#8338ec", "opacity": 0.4, "width": 1 },
+    "move": { "enable": true, "speed": 2 }
   },
   "interactivity": {
-    "detect_on": "canvas",
-    "events": {
-      "onhover": {
-        "enable": true,
-        "mode": "grab" /* Cambiado a 'grab' para un efecto más interactivo */
-      },
-      "onclick": {
-        "enable": true,
-        "mode": "push"
-      },
-      "resize": true
-    },
-    "modes": {
-      "grab": {
-        "distance": 180, /* Aumentado para un área de agarre mayor */
-        "line_linked": {
-          "opacity": 0.8
-        }
-      },
-      "bubble": {
-        "distance": 400,
-        "size": 40,
-        "duration": 2,
-        "opacity": 8,
-        "speed": 3
-      },
-      "repulse": {
-        "distance": 200,
-        "duration": 0.4
-      },
-      "push": {
-        "particles_nb": 4
-      },
-      "remove": {
-        "particles_nb": 2
-      }
-    }
+    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" } },
+    "modes": { "grab": { "distance": 180, "line_linked": { "opacity": 0.8 } } }
   },
   "retina_detect": true
 });
 
-// --- CÓDIGO FIREBASE Y LÓGICA DE LA APP ---
+// --- CONFIGURACIÓN FIREBASE ---
 const firebaseConfig = {
-  // ¡ATENCIÓN! REEMPLAZA ESTOS VALORES CON LOS DE TU PROYECTO DE FIREBASE
   apiKey: "AIzaSyCr1-2dIqgxoXBTKYgSusnUZorUICX2Too", 
   authDomain: "chatglobal-e9370.firebaseapp.com",
   databaseURL: "https://chatglobal-e9370-default-rtdb.firebaseio.com",
@@ -121,6 +26,7 @@ const firebaseConfig = {
   messagingSenderId: "382420208590",
   appId: "1:382420208590:web:9425fa28c8cdf669adb99f"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth(); 
@@ -128,65 +34,60 @@ const usersRef = db.ref("users");
 const uidMapRef = db.ref("uid_map"); 
 const adminLogsRef = db.ref("admin_logs"); 
 
-// Hemos quitado "registerView" de la lista de vistas
-const views = ["loginView", "usernamePromptView", "linkAccountView"];
-const show = (id) => views.forEach(v => document.getElementById(v).classList.toggle("hidden", v !== id));
+// --- NAVEGACIÓN ENTRE VISTAS ---
+const show = (id) => {
+  const views = ["welcomeView", "loginView", "usernamePromptView"];
+  views.forEach(v => {
+    const el = document.getElementById(v);
+    if (v === id) el.classList.remove("hidden");
+    else el.classList.add("hidden");
+  });
+  
+  const formCont = document.getElementById("formContainer");
+  if(id === "welcomeView") formCont.classList.add("hidden");
+  else formCont.classList.remove("hidden");
+};
 
-// Eliminado el evento onclick de goRegister porque el botón ya no existe
-document.getElementById("goLinkAccount").onclick = () => show("linkAccountView");
-document.getElementById("goBackToLogin").onclick = () => show("loginView");
+// Asignación de eventos de botones de navegación
+document.getElementById("btnGoLogin").onclick = () => show("loginView");
+document.getElementById("btnGoRegister").onclick = () => signInWithGoogle();
+document.getElementById("goBackHome").onclick = () => show("welcomeView");
 
-let googleUserData = null; 
+// --- LÓGICA DE FIREBASE ---
+let googleUserData = null;
 
-// --- FUNCIÓN PARA ENVIAR LOGS AL ADMIN (FIREBASE) ---
 const sendAdminLog = (username, action) => {
-    try {
-        const logEntry = adminLogsRef.push(); 
-        logEntry.set({
-            timestamp: new Date().toISOString(),
-            username: username,
-            action: action, 
-            status: "Success"
-        });
-        console.log(`Log enviado al admin para ${username}: ${action}`);
-    } catch (error) {
-        console.error("Error al enviar log al admin:", error);
-    }
+    adminLogsRef.push().set({
+        timestamp: new Date().toISOString(),
+        username: username,
+        action: action, 
+        status: "Success"
+    });
 };
-// -----------------------------------------------------
 
-// --- FUNCIONES MODAL ---
-const successModal = document.getElementById("successModal");
-const closeModalBtn = document.getElementById("closeModalBtn");
-const successMessage = document.getElementById("successMessage");
+const provider = new firebase.auth.GoogleAuthProvider();
 
-const showModal = (isManualRegistration, username, isLinking = false) => {
-    if (isLinking) {
-        successMessage.innerHTML = `🎉 ¡Éxito! Tu cuenta (**${username}**) ha sido migrada a Google.<br> Ahora inicia sesión usando el botón de Google.`;
-    } else if (isManualRegistration) {
-        // Este caso técnicamente ya no se usará, pero lo dejamos por si acaso
-        successMessage.innerHTML = `✅ Tu cuenta (**${username}**) ha sido creada con **éxito**.`;
+async function signInWithGoogle() {
+  try {
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    const uidSnap = await uidMapRef.child(user.uid).once("value");
+
+    if (uidSnap.exists()) {
+      const customUser = uidSnap.val();
+      sessionStorage.setItem("sociosxit_user", customUser);
+      sendAdminLog(customUser, "Google Login");
+      window.location.href = "dashboard.html";
     } else {
-        successMessage.innerHTML = `✅ Has completado tu registro (**${username}**) con **Google** exitosamente.`;
+      googleUserData = user; 
+      show("usernamePromptView"); 
+      document.getElementById("promptUser").value = user.displayName ? user.displayName.replace(/\s/g, '').toLowerCase() : user.email.split('@')[0];
     }
-    successModal.classList.remove("hidden");
-    setTimeout(() => successModal.classList.add("show"), 10); 
-};
+  } catch (error) { alert("Error: " + error.message); }
+}
 
-const hideModal = () => {
-    successModal.classList.remove("show");
-    setTimeout(() => {
-        successModal.classList.add("hidden");
-        // Redirige al dashboard
-        sessionStorage.getItem("sociosxit_user") ? window.location.href = "dashboard.html" : show("loginView"); 
-    }, 300); 
-};
+document.getElementById("googleLoginBtn").onclick = signInWithGoogle;
 
-closeModalBtn.onclick = hideModal;
-
-// --- SE HA ELIMINADO LA FUNCIÓN DE DESCARGAR CREDENCIALES Y EL REGISTRO MANUAL ---
-
-// --- LOGIN MANUAL (SE MANTIENE PARA USUARIOS ANTIGUOS) ---
 document.getElementById("loginBtn").onclick = async () => {
   const user = loginUser.value.trim();
   const pass = loginPass.value.trim();
@@ -194,159 +95,38 @@ document.getElementById("loginBtn").onclick = async () => {
 
   try {
     const snap = await usersRef.child(user).once("value");
-    if (!snap.exists() || snap.val().password !== pass) return alert("Datos incorrectos");
-    
-    // Verifica si la cuenta ha sido migrada (ya no tiene contraseña)
-    if (snap.val().password === null && snap.val().provider && snap.val().provider.startsWith('google')) {
-         return alert("Esta cuenta ha sido migrada a Google. Por favor, usa el botón 'Iniciar Sesión con Google'.");
-    }
-
-    sessionStorage.setItem("sociosxit_user", user);
-    sendAdminLog(user, "Manual Login"); // ⭐ LOG ADMIN
-    window.location.href = "dashboard.html";
-  } catch (error) {
-    console.error("Error al iniciar sesión: ", error);
-    alert("Ocurrió un error al iniciar sesión: " + error.message);
-  }
+    if (snap.exists() && snap.val().password === pass) {
+      sessionStorage.setItem("sociosxit_user", user);
+      sendAdminLog(user, "Manual Login");
+      window.location.href = "dashboard.html";
+    } else { alert("Datos incorrectos"); }
+  } catch (error) { console.error(error); }
 };
 
-// --- LÓGICA DE GOOGLE ---
-const provider = new firebase.auth.GoogleAuthProvider();
-
-async function signInWithGoogle() {
-  try {
-    const result = await auth.signInWithPopup(provider);
-    const user = result.user;
-    const uid = user.uid; 
-    
-    const uidSnap = await uidMapRef.child(uid).once("value");
-
-    if (uidSnap.exists()) {
-      // Usuario REGRESANDO: Inicia sesión con el nombre de usuario mapeado
-      const customUser = uidSnap.val();
-      sessionStorage.setItem("sociosxit_user", customUser);
-      sendAdminLog(customUser, "Google Login"); // ⭐ LOG ADMIN
-      window.location.href = "dashboard.html";
-
-    } else {
-      // Usuario NUEVO: Necesita elegir un nombre de usuario
-      googleUserData = user; 
-      show("usernamePromptView"); 
-      // Sugerir un nombre de usuario basado en el nombre de Google
-      document.getElementById("promptUser").value = user.displayName ? user.displayName.replace(/\s/g, '').toLowerCase() : user.email.split('@')[0];
-    }
-
-  } catch (error) {
-    console.error("Error en la autenticación con Google:", error);
-    if (error.code === 'auth/popup-closed-by-user') {
-        alert("La ventana de inicio de sesión con Google fue cerrada.");
-    } else {
-        alert("Ocurrió un error al iniciar sesión con Google: " + error.message);
-    }
-  }
-}
-
-// --- PROMPT DE USUARIO (REGISTRO GOOGLE NUEVO) ---
 document.getElementById("promptUserBtn").onclick = async () => {
   const customUser = promptUser.value.trim();
-
-  if (!customUser || customUser.length < 3) return alert("Ingresa un usuario válido (mínimo 3 caracteres).");
+  if (customUser.length < 3) return alert("Usuario muy corto");
 
   try {
     const userSnap = await usersRef.child(customUser).once("value");
-    if (userSnap.exists()) return alert(`El usuario '${customUser}' ya existe. Por favor, elige otro.`);
-    
-    const user = googleUserData;
-    const uid = user.uid;
+    if (userSnap.exists()) return alert("El usuario ya existe");
 
-    // 1. Registrar en la base de datos con el nombre de usuario
     await usersRef.child(customUser).set({
-      uid: uid,
-      email: user.email,
-      name: user.displayName || "Google User",
+      uid: googleUserData.uid,
+      email: googleUserData.email,
       provider: 'google',
-      verified: true,
       registered_at: new Date().toISOString()
     });
 
-    // 2. Crear el mapeo UID -> Nombre de usuario
-    await uidMapRef.child(uid).set(customUser);
+    await uidMapRef.child(googleUserData.uid).set(customUser);
     sessionStorage.setItem("sociosxit_user", customUser);
-    sendAdminLog(customUser, "Google Registration"); // ⭐ LOG ADMIN
-    showModal(false, customUser); 
-
-  } catch (error) {
-    console.error("Error al finalizar el registro de Google:", error);
-    alert("Ocurrió un error al finalizar el registro: " + error.message);
-  }
+    sendAdminLog(customUser, "Google Registration");
+    
+    document.getElementById("successMessage").innerText = "¡Registro exitoso!";
+    document.getElementById("successModal").classList.remove("hidden");
+  } catch (error) { alert("Error: " + error.message); }
 };
 
-// --- LÓGICA DE MIGRACIÓN/REEMPLAZO DE CUENTA ---
-document.getElementById("linkAccountBtn").onclick = async () => {
-    const user = linkUser.value.trim();
-    const pass = linkPass.value.trim();
-
-    if (!user || !pass) return alert("Completa tu usuario y contraseña actuales.");
-
-    try {
-        // 1. Validar las credenciales en la Realtime Database (RTDB)
-        const snap = await usersRef.child(user).once("value");
-        if (!snap.exists() || snap.val().password !== pass) {
-            return alert("Usuario o Contraseña manual incorrectos.");
-        }
-        
-        if (snap.val().uid && snap.val().provider && snap.val().provider.startsWith('google')) {
-             return alert("Esta cuenta ya ha sido migrada a Google.");
-        }
-
-        // 2. Iniciar sesión con Google para obtener las credenciales de destino
-        alert(`✅ Credenciales manuales verificadas. Ahora inicia sesión con la cuenta de Google a la que quieres migrar la cuenta '${user}'.`);
-        
-        // Forzar el login con Google
-        const googleResult = await auth.signInWithPopup(provider);
-        
-        const googleUser = googleResult.user;
-        const googleUid = googleUser.uid;
-        const googleEmail = googleUser.email;
-        const googleDisplayName = googleUser.displayName;
-
-        // 3. Verificar si el UID de Google ya está mapeado a otro usuario en RTDB
-        const existingMapping = await uidMapRef.child(googleUid).once("value");
-        if (existingMapping.exists() && existingMapping.val() !== user) {
-            return alert("🚨 Conflicto de Cuenta: La cuenta de Google seleccionada ya está vinculada a otra cuenta de SocioXIT.");
-        }
-
-        // 4. MIGRACIÓN FORZADA: Actualizar el registro del usuario manual con los datos de Google
-        await usersRef.child(user).update({
-            uid: googleUid,
-            email: googleEmail,
-            name: googleDisplayName || user,
-            provider: 'google_migrated',
-            // Eliminamos la contraseña manual
-            password: null, 
-            migrated_at: new Date().toISOString()
-        });
-
-        // 5. Crear el mapeo UID -> Nombre de usuario
-        await uidMapRef.child(googleUid).set(user);
-        
-        // 6. Completar el inicio de sesión y mostrar el éxito
-        sessionStorage.setItem("sociosxit_user", user);
-        sendAdminLog(user, "Account Migration"); // ⭐ LOG ADMIN
-        showModal(false, user, true); 
-
-    } catch (error) {
-        console.error("Error en el proceso de migración:", error);
-        if (error.code === 'auth/popup-closed-by-user') {
-            alert("La ventana de Google fue cerrada. Vuelve a intentarlo.");
-        } else {
-             alert("Ocurrió un error al migrar la cuenta. Revisa la consola para más detalles.");
-        }
-    } finally {
-        // Aseguramos que el estado de Auth queda limpio
-        auth.signOut();
-    }
+document.getElementById("closeModalBtn").onclick = () => {
+    window.location.href = "dashboard.html";
 };
-
-// Asignar la función al botón de Google Login (el de registro ya no existe)
-document.getElementById("googleLoginBtn").onclick = signInWithGoogle;
