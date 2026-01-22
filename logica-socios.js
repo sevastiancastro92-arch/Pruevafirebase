@@ -34,7 +34,7 @@ const usersRef = db.ref("users");
 const uidMapRef = db.ref("uid_map"); 
 const adminLogsRef = db.ref("admin_logs"); 
 
-// --- NAVEGACIÓN ENTRE VISTAS ---
+// --- NAVEGACIÓN ---
 const show = (id) => {
   const views = ["welcomeView", "loginView", "usernamePromptView"];
   views.forEach(v => {
@@ -48,12 +48,21 @@ const show = (id) => {
   else formCont.classList.remove("hidden");
 };
 
-// Asignación de eventos de botones de navegación
+// --- EVENTOS DE NAVEGACIÓN ---
 document.getElementById("btnGoLogin").onclick = () => show("loginView");
 document.getElementById("btnGoRegister").onclick = () => signInWithGoogle();
 document.getElementById("goBackHome").onclick = () => show("welcomeView");
 
-// --- LÓGICA DE FIREBASE ---
+// --- FUNCIÓN VER CONTRASEÑA ---
+document.getElementById("btnEye").onclick = function() {
+    const passInput = document.getElementById("loginPass");
+    const type = passInput.getAttribute("type") === "password" ? "text" : "password";
+    passInput.setAttribute("type", type);
+    this.classList.toggle("fa-eye");
+    this.classList.toggle("fa-eye-slash");
+};
+
+// --- LÓGICA FIREBASE ---
 let googleUserData = null;
 
 const sendAdminLog = (username, action) => {
@@ -89,8 +98,8 @@ async function signInWithGoogle() {
 document.getElementById("googleLoginBtn").onclick = signInWithGoogle;
 
 document.getElementById("loginBtn").onclick = async () => {
-  const user = loginUser.value.trim();
-  const pass = loginPass.value.trim();
+  const user = document.getElementById("loginUser").value.trim();
+  const pass = document.getElementById("loginPass").value.trim();
   if (!user || !pass) return alert("Completa todos los campos");
 
   try {
@@ -104,7 +113,7 @@ document.getElementById("loginBtn").onclick = async () => {
 };
 
 document.getElementById("promptUserBtn").onclick = async () => {
-  const customUser = promptUser.value.trim();
+  const customUser = document.getElementById("promptUser").value.trim();
   if (customUser.length < 3) return alert("Usuario muy corto");
 
   try {
@@ -129,4 +138,12 @@ document.getElementById("promptUserBtn").onclick = async () => {
 
 document.getElementById("closeModalBtn").onclick = () => {
     window.location.href = "dashboard.html";
+};
+
+// Protección anti-copia
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.onkeydown = function(e) {
+  if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 85 || e.keyCode === 73) || e.keyCode === 123) {
+    return false;
+  }
 };
