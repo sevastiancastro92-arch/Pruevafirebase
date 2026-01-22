@@ -1,93 +1,6 @@
-(function(){
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  let w = canvas.width = innerWidth;
-  let h = canvas.height = innerHeight;
-  const colors = [
-    'rgba(0,240,255,0.95)',
-    'rgba(255,77,240,0.95)',
-    'rgba(0,255,136,0.95)',
-    'rgba(255,212,96,0.95)'
-  ];
-  const particles = [];
-  const PARTICLE_COUNT = Math.floor((w*h) / 80000) + 30; // scaled by screen
-  function rand(min,max){return Math.random()*(max-min)+min;}
-  function makeParticle(){
-    return {
-      x: rand(0,w),
-      y: rand(0,h),
-      vx: rand(-0.3,0.3),
-      vy: rand(-0.15,0.15),
-      r: rand(0.7,2.6),
-      life: rand(60,240),
-      hue: colors[Math.floor(Math.random()*colors.length)],
-      glow: rand(6,18)
-    };
-  }
-  for(let i=0;i<PARTICLE_COUNT;i++) particles.push(makeParticle());
-  function resize(){
-    w = canvas.width = innerWidth;
-    h = canvas.height = innerHeight;
-  }
-  addEventListener('resize', ()=>{ resize(); });
+/* === SCRIPT COMPLETO SOCIOSXIT - LÓGICA DE NEGOCIO Y SEGURIDAD === */
 
-  function draw(){
-    ctx.clearRect(0,0,w,h);
-    const g = ctx.createLinearGradient(0,0,w,h);
-    g.addColorStop(0, 'rgba(10,8,20,0.0)');
-    g.addColorStop(1, 'rgba(6,4,12,0.12)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,w,h);
-
-    for(let p of particles){
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life--;
-      if(p.x < -20) p.x = w+20;
-      if(p.x > w+20) p.x = -20;
-      if(p.y < -20) p.y = h+20;
-      if(p.y > h+20) p.y = -20;
-      if(p.life <= 0){
-        Object.assign(p, makeParticle());
-        p.x = rand(0,w);
-        p.y = rand(0,h);
-      }
-
-      ctx.beginPath();
-      const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.glow);
-      grd.addColorStop(0, p.hue);
-      grd.addColorStop(0.15, p.hue.replace('1)', '0.35)'));
-      grd.addColorStop(0.6, p.hue.replace('1)', '0.08)'));
-      grd.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = grd;
-      ctx.arc(p.x, p.y, p.r*3 + (p.glow/6), 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    ctx.lineWidth = 0.6;
-    for(let i=0;i<particles.length;i++){
-      for(let j=i+1;j<particles.length && j<i+4;j++){
-        const a=particles[i], b=particles[j];
-        const dx=a.x-b.x, dy=a.y-b.y;
-        const d2 = dx*dx+dy*dy;
-        if(d2 < 25000){
-          const alpha = 1 - d2/25000;
-          ctx.strokeStyle = 'rgba(120,200,255,'+ (alpha*0.06) +')';
-          ctx.beginPath();
-          ctx.moveTo(a.x,a.y);
-          ctx.lineTo(b.x,b.y);
-          ctx.stroke();
-        }
-      }
-    }
-    requestAnimationFrame(draw);
-  }
-  resize();
-  draw();
-})();
-
-/* ===================== REST OF APP ===================== */
-
+// 1. Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCr1-2dIqgxoXBTKYgSusnUZorUICX2Too",
   authDomain: "chatglobal-e9370.firebaseapp.com",
@@ -99,417 +12,219 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const pubsRef = db.ref("publications");
 
-const userNameEl = document.getElementById("userName");
-const userBalanceEl = document.getElementById("userBalance");
-const logoutBtn = document.getElementById("logoutBtn");
-const publicationsContainer = document.getElementById("publicationsContainer");
-const myKeysList = document.getElementById("myKeysList");
-const myKeysContainer = document.getElementById("myKeysContainer");
-
-const hamburgerBtn = document.getElementById("hamburgerBtn");
-const sideMenu = document.getElementById("sideMenu");
-const menuBackdrop = document.getElementById("menuBackdrop");
-const menuUserName = document.getElementById("menuUserName");
-const menuUserBalance = document.getElementById("menuUserBalance");
-const menuAvatar = document.getElementById("menuAvatar");
-const menuPublicaciones = document.getElementById("menuPublicaciones");
-const menuKeys = document.getElementById("menuKeys");
-const menuLogout = document.getElementById("menuLogout");
-const menuRecharge = document.getElementById("menuRecharge"); 
-
-const confirmModal = document.getElementById("confirmModal");
-const confirmText = document.getElementById("confirmText");
-const confirmOk = document.getElementById("confirmOk");
-const confirmCancel = document.getElementById("confirmCancel");
-const keyModal = document.getElementById("keyModal");
-const keyModalContent = document.getElementById("keyModalContent");
-const keyCopyBtn = document.getElementById("keyCopyBtn");
-const keyCloseBtn = document.getElementById("keyCloseBtn");
-const rechargeModal = document.getElementById("rechargeModal");
-const rechargeAmountInput = document.getElementById("rechargeAmountInput");
-const rechargeConfirmBtn = document.getElementById("rechargeConfirmBtn");
-const rechargeCancelBtn = document.getElementById("rechargeCancelBtn");
-const rechargeError = document.getElementById("rechargeError");
-
-const finalPriceDisplay = document.getElementById("finalPriceDisplay"); 
-
-const userLevelTextMenu = document.getElementById("userLevelTextMenu");
-const levelProgressTextMenu = document.getElementById("levelProgressTextMenu");
-const levelProgressBarMenu = document.getElementById("levelProgressBarMenu");
-const levelNextGoalMenu = document.getElementById("levelNextGoalMenu");
-
-const userLevelTextMain = document.getElementById("userLevelTextMain");
-const levelProgressTextMain = document.getElementById("levelProgressTextMain");
-const levelProgressBarMain = document.getElementById("levelProgressBarMain");
-const levelNextGoalMain = document.getElementById("levelNextGoalMain");
-
-const tabPublicaciones = document.getElementById("tabPublicaciones");
-const tabKeys = document.getElementById("tabKeys");
-
-tabPublicaciones.onclick = () => showTab("pubs");
-tabKeys.onclick = () => showTab("keys");
-
-function showTab(tab) {
-  if (tab === "pubs") {
-    publicationsContainer.classList.remove("hidden");
-    myKeysContainer.classList.add("hidden");
-    tabPublicaciones.classList.add("active");
-    tabKeys.classList.remove("active");
-  } else {
-    publicationsContainer.classList.add("hidden");
-    myKeysContainer.classList.remove("hidden");
-    tabPublicaciones.classList.remove("active");
-    tabKeys.classList.add("active");
+// 2. Sistema de Partículas
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = innerWidth;
+  let h = canvas.height = innerHeight;
+  const particles = [];
+  function makeP() { return { x: Math.random()*w, y: Math.random()*h, vx: Math.random()*0.4-0.2, vy: Math.random()*0.4-0.2, r: Math.random()*2, life: Math.random()*100+100 }; }
+  for(let i=0; i<60; i++) particles.push(makeP());
+  function draw() {
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "rgba(0, 243, 255, 0.5)";
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.life--;
+      if(p.life <= 0) Object.assign(p, makeP());
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    });
+    requestAnimationFrame(draw);
   }
-}
+  draw();
+})();
 
+// 3. Variables de Estado
 const currentUser = sessionStorage.getItem("sociosxit_user");
+let userSpending = 0;
+let isBuying = false; // LOCK DE SEGURIDAD
+let _pending = null;
+
 if (!currentUser) window.location.href = "index.html";
-else {
-  userNameEl.textContent = currentUser;
-  loadUserBalance(currentUser);
-  loadUserPurchases(currentUser);
-  loadUserSpendingAndLevel(currentUser);
-  menuUserName.textContent = currentUser;
-  menuAvatar.textContent = String(currentUser).charAt(0)?.toUpperCase() || "U";
-}
+const userPath = currentUser.replace(/\./g, "_");
 
-logoutBtn.onclick = () => {
-  sessionStorage.removeItem("sociosxit_user");
-  window.location.href = "index.html";
-};
-
-function openMenu() {
-  sideMenu.classList.add("open");
-  menuBackdrop.style.display = "block";
-  setTimeout(()=> menuBackdrop.style.opacity = "1", 10);
-  hamburgerBtn.classList.add("open");
-  sideMenu.setAttribute("aria-hidden", "false");
-}
-function closeMenu() {
-  sideMenu.classList.remove("open");
-  menuBackdrop.style.opacity = "0";
-  hamburgerBtn.classList.remove("open");
-  sideMenu.setAttribute("aria-hidden", "true");
-  setTimeout(()=> menuBackdrop.style.display = "none", 240);
-}
-
-hamburgerBtn.addEventListener("click", ()=> {
-  if (sideMenu.classList.contains("open")) closeMenu();
-  else openMenu();
-});
-
-menuBackdrop.addEventListener("click", closeMenu);
-
-window.addEventListener("scroll", () => {
-  const px = window.scrollY || document.documentElement.scrollTop;
-  if (px > 20) hamburgerBtn.classList.add("open");
-  else {
-    if (!sideMenu.classList.contains("open")) hamburgerBtn.classList.remove("open");
-  }
-});
-
-menuPublicaciones.addEventListener("click", ()=> { showTab("pubs"); closeMenu(); });
-menuKeys.addEventListener("click", ()=> { showTab("keys"); closeMenu(); });
-menuLogout.addEventListener("click", ()=> {
-  sessionStorage.removeItem("sociosxit_user");
-  window.location.href = "index.html";
-});
-
-// --- RECARGA ---
-menuRecharge.addEventListener("click", ()=> { 
-  closeMenu(); 
-  rechargeModal.style.display = "flex";
-  rechargeAmountInput.value = ""; 
-  rechargeError.classList.add("hidden");
-});
-
-rechargeCancelBtn.addEventListener("click", ()=> { 
-  rechargeModal.style.display = "none";
-});
-
-rechargeConfirmBtn.addEventListener("click", ()=> { 
-  const amount = parseFloat(rechargeAmountInput.value);
-  const minAmount = 4.00;
-  const whatsappNumber = "+573142369516";
-  if (isNaN(amount) || amount < minAmount) {
-    rechargeError.classList.remove("hidden");
-    return;
-  }
-  rechargeError.classList.add("hidden");
-  rechargeModal.style.display = "none";
-  const message = `Hola quiero recargar ${amount.toFixed(2)} USD en la pagina de socios`;
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-  window.open(whatsappURL, '_blank');
-});
-
-// --- PUBLICACIONES ---
-pubsRef.on("value", (snapshot) => {
-  publicationsContainer.innerHTML = "";
-  const data = snapshot.val();
-  if (!data) {
-    publicationsContainer.innerHTML = "<p>No hay publicaciones disponibles.</p>";
-    return;
-  }
-  const pubsArray = Object.keys(data).map(key => {
-    return { id: key, ...data[key] };
-  });
-  pubsArray.sort((a, b) => (b.buyCount || 0) - (a.buyCount || 0));
-  pubsArray.forEach(pub => {
-    publicationsContainer.appendChild(createPublicationElement(pub, pub.id));
-  });
-});
-
-function createPublicationElement(pub, key) {
-  const div = document.createElement("div");
-  div.className = "card rounded-xl overflow-hidden shadow-lg p-5";
-  let mediaHTML = "";
-  if (pub.mediaUrl) {
-    if (pub.mediaUrl.includes("youtube.com") || pub.mediaUrl.includes("youtu.be")) {
-      const videoId = pub.mediaUrl.split('v=')[1] || pub.mediaUrl.split('/').pop();
-      mediaHTML = `<div class="aspect-w-16 aspect-h-9 mb-4"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="w-full h-full rounded-lg"></iframe></div>`;
-    } else {
-      mediaHTML = `<img src="${pub.mediaUrl}" alt="${pub.title}" class="w-full h-48 object-cover rounded-lg mb-4">`;
-    }
-  }
-
-  let buttonsHTML = "";
-  if (pub.buttons) {
-    Object.keys(pub.buttons).forEach(btnKey => {
-      const btn = pub.buttons[btnKey];
-      const priceNum = parseFloat(btn.price || 0);
-      const price = Number.isFinite(priceNum) ? priceNum.toFixed(2) : "0.00";
-      const duration = btn.duration || (btn.days ? `${btn.days} días` : "");
-      const keysCount = countKeys(btn.keys);
-      const safeBtnId = String(btnKey).replace(/\W/g, "_");
-
-      buttonsHTML += `
-        <div class="btn-buy neon-btn p-4 rounded-lg text-center transition-transform hover:scale-105 cursor-pointer mb-3">
-          <button onclick="openConfirmModal('${key}','${safeBtnId}', ${priceNum}, '${btnKey}')" class="w-full text-left">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-2xl font-bold text-neon-cyan">$${price}</div>
-                <div class="text-sm font-semibold text-neon-pink">${duration || '—'}</div>
-                <div class="text-xs small-muted mt-1">🔑 ${keysCount} disponibles</div>
-              </div>
-              <div><div class="py-2 px-3 rounded-full bg-white text-blue-900 font-bold">Comprar</div></div>
-            </div>
-          </button>
-        </div>`;
-    });
-  }
-
-  div.innerHTML = `
-    ${mediaHTML}
-    <h2 class="text-2xl font-bold mb-3 text-neon-pink">${pub.title}</h2>
-    <button class="btn-show neon-btn w-full py-2 rounded-lg font-semibold mb-3" onclick="toggleDetails('${key}')">Mostrar Opciones</button>
-    <div id="details-${key}" class="hidden mt-4 space-y-3">${buttonsHTML || "<p>Sin opciones</p>"}</div>
-  `;
-  return div;
-}
-
-function toggleDetails(key) {
-  const el = document.getElementById(`details-${key}`);
-  if (el) el.classList.toggle("hidden");
-}
-
-function countKeys(keysField) {
-  if (!keysField) return 0;
-  if (Array.isArray(keysField)) return keysField.length;
-  if (typeof keysField === "string") return keysField.split(",").map(s => s.trim()).filter(Boolean).length;
-  return 0;
-}
-
-function parseKeysField(keysField) {
-  if (!keysField) return [];
-  if (Array.isArray(keysField)) {
-    return keysField.map(k => {
-      if (typeof k === "string") {
-        const v = k.match(/key\s*:\s*(.+)/i) ? k.match(/key\s*:\s*(.+)/i)[1].trim() : k.trim();
-        return { key: v, usada: false };
-      } else if (typeof k === "object" && k.key) return { key: String(k.key).trim(), usada: !!k.usada };
-      return null;
-    }).filter(Boolean);
-  }
-  if (typeof keysField === "string") {
-    return keysField.split(",").map(s => s.trim()).filter(Boolean).map(p => {
-      const v = p.match(/key\s*:\s*(.+)/i) ? p.match(/key\s*:\s*(.+)/i)[1].trim() : p;
-      return { key: v, usada: false };
-    });
-  }
-  return [];
-}
-
-async function updateKeysField(pubId, btnKeyIdentifier, originalBtn, newKeysArr) {
-  const pubSnap = await db.ref(`publications/${pubId}`).once("value");
-  const pub = pubSnap.val();
-  if (!pub) return;
-  const targetPath = Array.isArray(pub.buttons) ? `publications/${pubId}/buttons/${btnKeyIdentifier}/keys` : `publications/${pubId}/buttons/${btnKeyIdentifier}/keys`;
+// 4. Carga de Datos de Usuario
+function init() {
+  document.getElementById("userName").textContent = currentUser.split('@')[0].toUpperCase();
   
-  if (typeof originalBtn.keys === "string") {
-    const s = newKeysArr.map(k => `key: ${k.key}`).join(", ");
-    await db.ref(targetPath).set(s);
-  } else {
-    const arr = newKeysArr.map(k => ({ key: k.key, usada: !!k.usada }));
-    await db.ref(targetPath).set(arr);
-  }
-}
+  // Balance
+  db.ref(`users/${userPath}/balance`).on("value", s => {
+    const bal = parseFloat(s.val() || 0);
+    document.getElementById("userBalance").textContent = `${bal.toFixed(2)} USD`;
+  });
 
-// --- NIVEL Y DESCUENTOS (ADMIN CONTROLLED) ---
-const LEVEL_VIP_SPEND = 50;
-const LEVEL_PREMIUM_SPEND = 150;
-let userTotalSpending = 0; 
-
-function calculateLevel(spending) {
-    if (spending >= LEVEL_PREMIUM_SPEND) {
-        return { level: "Premium", nextGoal: LEVEL_PREMIUM_SPEND, goalLabel: "¡Nivel Máximo!", progressColor: "var(--level-premium)" };
-    } else if (spending >= LEVEL_VIP_SPEND) {
-        return { level: "VIP", nextGoal: LEVEL_PREMIUM_SPEND, goalLabel: `Meta Premium: $${LEVEL_PREMIUM_SPEND.toFixed(2)}`, progressColor: "var(--level-vip)" };
-    } else {
-        return { level: "Base", nextGoal: LEVEL_VIP_SPEND, goalLabel: `Meta VIP: $${LEVEL_VIP_SPEND.toFixed(2)}`, progressColor: "var(--level-base)" };
-    }
-}
-
-function updateLevelUI(spending) {
-    const { level, nextGoal, goalLabel, progressColor } = calculateLevel(spending);
-    userTotalSpending = spending; 
-    const bars = [
-        { userLevelText: userLevelTextMenu, levelProgressText: levelProgressTextMenu, levelProgressBar: levelProgressBarMenu, levelNextGoal: levelNextGoalMenu },
-        { userLevelText: userLevelTextMain, levelProgressText: levelProgressTextMain, levelProgressBar: levelProgressBarMain, levelNextGoal: levelNextGoalMain }
-    ];
-    bars.forEach(bar => {
-        if (!bar.userLevelText) return;
-        bar.userLevelText.textContent = `Nivel: ${level}`;
-        bar.userLevelText.className = `level-label ${level === 'VIP' ? 'level-vip-text' : level === 'Premium' ? 'level-premium-text' : ''}`;
-        bar.levelNextGoal.textContent = goalLabel;
-        let percentage = (spending / nextGoal) * 100;
-        bar.levelProgressBar.style.width = `${Math.min(percentage, 100).toFixed(2)}%`;
-        bar.levelProgressBar.style.backgroundColor = progressColor;
-        bar.levelProgressText.textContent = `$${spending.toFixed(2)}`;
-    });
-}
-
-function loadUserSpendingAndLevel(email) {
-    const userKey = sanitizeEmail(email);
-    db.ref(`users/${userKey}/purchases`).on("value", snap => {
-        let totalSpent = 0;
-        snap.forEach(p => { totalSpent += parseFloat(p.val().price || 0); });
-        updateLevelUI(totalSpent);
-    });
-}
-
-// --- MODAL CONFIRMACION (DINAMICO DESDE ADMIN) ---
-let _pendingPurchase = null; 
-
-async function openConfirmModal(pubId, safeBtnId, price, rawBtnId) {
-    // 1. Obtener la data actual del botón directamente desde Firebase
-    const pubSnap = await db.ref(`publications/${pubId}`).once("value");
-    const pub = pubSnap.val();
-    const btn = Array.isArray(pub.buttons) ? pub.buttons[Number(rawBtnId)] : pub.buttons[rawBtnId];
-
-    // 2. Determinar rango y buscar descuento configurado por el admin para esta key
-    const { level } = calculateLevel(userTotalSpending);
+  // Gastos y Nivel
+  db.ref(`users/${userPath}/purchases`).on("value", s => {
+    let total = 0;
+    const list = document.getElementById("myKeysContainer");
+    list.innerHTML = '<h2 class="text-xl font-black text-neon-pink mb-4">HISTORIAL DE COMPRAS</h2>';
     
-    // Aquí el sistema lee lo que pusiste en el Admin: discountVIP o discountPremium
-    let discountAmount = 0;
-    if (level === "VIP") {
-        discountAmount = parseFloat(btn.discountVIP || 0); // Ej: 0.50
-    } else if (level === "Premium") {
-        discountAmount = parseFloat(btn.discountPremium || 0); // Ej: 1.00
-    }
+    s.forEach(snap => {
+      const p = snap.val();
+      total += parseFloat(p.price || 0);
+      const div = document.createElement("div");
+      div.className = "card p-5 flex justify-between items-center";
+      div.innerHTML = `<div><div class="font-bold">${p.title}</div><div class="text-[10px] opacity-40">${p.date.split('T')[0]}</div></div><div class="text-neon-green font-mono font-bold">${p.key}</div>`;
+      list.prepend(div);
+    });
+    userSpending = total;
+  });
+}
+init();
 
-    const finalPrice = Math.max(0, price - discountAmount);
-
-    confirmModal.style.display = "flex";
-    confirmText.textContent = `¿Comprar key? Precio: $${Number(price).toFixed(2)} USD`;
-
-    if (discountAmount > 0) {
-        finalPriceDisplay.innerHTML = `
-            <span class="text-xl font-bold text-neon-green">Final: $${finalPrice.toFixed(2)} USD</span>
-            <span class="text-sm text-neon-cyan ml-2">(-$${discountAmount.toFixed(2)} Desc. ${level})</span>
-        `;
-    } else {
-        finalPriceDisplay.textContent = `Final: $${finalPrice.toFixed(2)} USD`;
-        finalPriceDisplay.className = "text-neon-yellow";
-    }
-
-    _pendingPurchase = { pubId, safeBtnId, price, rawBtnId, finalPrice, discountAmount };
+// 5. Lógica de Niveles y Descuentos
+function getLevel(spending) {
+  if (spending >= 150) return { name: "PREMIUM", discount: "discountPremium" };
+  if (spending >= 50) return { name: "VIP", discount: "discountVIP" };
+  return { name: "BASE", discount: null };
 }
 
-confirmCancel.onclick = () => { confirmModal.style.display = "none"; _pendingPurchase = null; };
-confirmOk.onclick = async () => {
-  if (!_pendingPurchase) return;
-  confirmModal.style.display = "none";
-  await comprarKey(_pendingPurchase.pubId, _pendingPurchase.safeBtnId, _pendingPurchase.price, _pendingPurchase.rawBtnId, _pendingPurchase.finalPrice, _pendingPurchase.discountAmount);
-  _pendingPurchase = null;
+// 6. Manejo de Publicaciones
+db.ref("publications").on("value", s => {
+  const container = document.getElementById("publicationsContainer");
+  container.innerHTML = "";
+  s.forEach(snap => {
+    const pub = snap.val();
+    const pubId = snap.key;
+    const card = document.createElement("div");
+    card.className = "card overflow-hidden";
+    card.innerHTML = `
+      <img src="${pub.mediaUrl}" class="w-full h-44 object-cover opacity-80">
+      <div class="p-6">
+        <h3 class="text-lg font-black mb-4 tracking-tight">${pub.title}</h3>
+        <div class="grid grid-cols-1 gap-2">
+          ${Object.keys(pub.buttons || {}).map(bKey => {
+            const btn = pub.buttons[bKey];
+            return `<button onclick="preparePurchase('${pubId}', '${bKey}', ${btn.price})" class="neon-btn py-3 rounded-xl text-sm uppercase">${btn.duration || bKey} - $${btn.price}</button>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+});
+
+// 7. FLUJO DE COMPRA SEGURO
+async function preparePurchase(pubId, btnKey, price) {
+  const pubSnap = await db.ref(`publications/${pubId}`).once("value");
+  const btn = pubSnap.val().buttons[btnKey];
+  const level = getLevel(userSpending);
+  
+  let discount = btn[level.discount] || 0;
+  let finalPrice = Math.max(0, price - discount);
+
+  document.getElementById("confirmText").innerHTML = `Producto: ${pubSnap.val().title}<br>Nivel: <span class="text-neon-cyan">${level.name}</span>`;
+  document.getElementById("finalPriceDisplay").textContent = `$${finalPrice.toFixed(2)} USD`;
+  document.getElementById("confirmModal").style.display = "flex";
+
+  _pending = { pubId, btnKey, finalPrice, title: pubSnap.val().title };
+}
+
+document.getElementById("confirmCancel").onclick = () => { document.getElementById("confirmModal").style.display = "none"; };
+
+document.getElementById("confirmOk").onclick = async () => {
+  if (!_pending || isBuying) return;
+  document.getElementById("confirmModal").style.display = "none";
+
+  // INICIO DE PROCESAMIENTO DE 3 SEGUNDOS
+  const modal = document.getElementById("processingModal");
+  const countEl = document.getElementById("processCountdown");
+  modal.style.display = "flex";
+  
+  for(let i=3; i>0; i--) {
+    countEl.textContent = i;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  modal.style.display = "none";
+
+  ejecutarCompra();
 };
 
-// --- COMPRA FINAL ---
-async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice, discountAmount) {
+async function ejecutarCompra() {
+  if (isBuying) return;
+  isBuying = true;
+
   try {
-    const userKey = sanitizeEmail(currentUser);
-    const userRef = db.ref(`users/${userKey}`);
+    const userRef = db.ref(`users/${userPath}`);
     const balSnap = await userRef.child("balance").once("value");
     let balance = parseFloat(balSnap.val() || 0);
 
-    if (balance < finalPrice) { alert("⚠️ Saldo insuficiente."); return; }
+    if (balance < _pending.finalPrice) {
+      alert("Saldo insuficiente.");
+      isBuying = false;
+      return;
+    }
 
-    const pubSnap = await db.ref(`publications/${pubId}`).once("value");
-    const pub = pubSnap.val();
-    let btnIndexOrKey = Array.isArray(pub.buttons) ? Number(rawBtnId) : rawBtnId;
-    let originalBtn = pub.buttons[btnIndexOrKey];
+    const pubRef = db.ref(`publications/${_pending.pubId}/buttons/${_pending.btnKey}`);
+    const btnSnap = await pubRef.once("value");
+    const btnData = btnSnap.val();
 
-    const keysArr = parseKeysField(originalBtn.keys);
-    if (!keysArr.length) { alert("❌ Sin claves."); return; }
-    const selected = keysArr.shift();
+    // Parsear Keys
+    let keys = [];
+    if(Array.isArray(btnData.keys)) keys = [...btnData.keys];
+    else if(typeof btnData.keys === 'string') keys = btnData.keys.split(",").map(k => k.trim()).filter(k => k);
 
-    // Actualizar base de datos
-    await userRef.child("balance").set(Number((balance - finalPrice).toFixed(2)));
-    await updateKeysField(pubId, btnIndexOrKey, originalBtn, keysArr);
+    if (keys.length === 0) {
+      alert("¡SIN STOCK! Alguien compró la última key justo ahora.");
+      isBuying = false;
+      return;
+    }
 
-    await userRef.child("purchases").push().set({
-      pubId, title: pub.title, optionText: originalBtn.text || originalBtn.option,
-      key: selected.key, price: Number(finalPrice), originalPrice: Number(originalPrice),
-      discountApplied: Number(discountAmount).toFixed(2), date: new Date().toISOString()
-    });
+    // EXTRAER KEY (Garantiza que no se repita)
+    const selected = keys.shift();
+
+    // Transacción en Firebase
+    await userRef.child("balance").set(Number((balance - _pending.finalPrice).toFixed(2)));
+    await pubRef.child("keys").set(keys); // Actualizamos la lista sin la key vendida
     
-    await db.ref(`publications/${pubId}/buyCount`).transaction(c => (c || 0) + 1);
-
-    keyModalContent.innerHTML = `<div class="mono text-green-300 font-semibold p-2">${selected.key}</div>`;
-    keyModal.style.display = "flex";
-    keyCopyBtn.onclick = () => { navigator.clipboard.writeText(selected.key); alert("🔑 Copiado."); };
-    keyCloseBtn.onclick = () => { keyModal.style.display = "none"; };
-    userBalanceEl.textContent = `$${Number(balance - finalPrice).toFixed(2)}`;
-
-  } catch (err) { alert("Error en compra."); }
-}
-
-function sanitizeEmail(email) { return email.replace(/\./g, "_"); }
-
-function loadUserBalance(email) {
-  db.ref(`users/${sanitizeEmail(email)}/balance`).on("value", snap => {
-    const b = parseFloat(snap.val() || 0);
-    userBalanceEl.textContent = `$${b.toFixed(2)}`;
-    menuUserBalance.textContent = `Saldo: $${b.toFixed(2)}`;
-  });
-}
-
-function loadUserPurchases(email) {
-  db.ref(`users/${sanitizeEmail(email)}/purchases`).on("value", snap => {
-    myKeysList.innerHTML = "";
-    const data = snap.val();
-    if (!data) return;
-    Object.keys(data).reverse().forEach(k => {
-      const it = data[k];
-      const div = document.createElement("div");
-      div.className = "card rounded-lg p-4 mb-2";
-      div.innerHTML = `<div class="flex justify-between"><div><b>${it.title}</b><br>${it.optionText}</div><div class="text-right text-green-400 font-bold">$${it.price.toFixed(2)}<br><small>${it.key}</small></div></div>`;
-      myKeysList.appendChild(div);
+    // Guardar compra
+    await userRef.child("purchases").push().set({
+      title: _pending.title,
+      key: (typeof selected === 'object' ? selected.key : selected),
+      price: _pending.finalPrice,
+      date: new Date().toISOString()
     });
-  });
+
+    // Mostrar Resultado
+    document.getElementById("keyModalContent").innerHTML = `
+      <div class="text-xs text-white/40 mb-2 uppercase tracking-widest">Tu código de acceso:</div>
+      <div class="bg-white/5 border border-neon-green p-4 rounded-2xl font-mono text-xl text-neon-green shadow-[0_0_15px_rgba(10,255,96,0.1)]">
+        ${(typeof selected === 'object' ? selected.key : selected)}
+      </div>
+    `;
+    document.getElementById("keyModal").style.display = "flex";
+
+  } catch (e) {
+    console.error(e);
+    alert("Error de red. Intenta de nuevo.");
+  } finally {
+    isBuying = false;
+    _pending = null;
+  }
 }
 
-showTab("pubs");
+// Botones de Modal Key
+document.getElementById("keyCopyBtn").onclick = () => {
+  const keyText = document.querySelector("#keyModalContent .font-mono").textContent.trim();
+  navigator.clipboard.writeText(keyText);
+  document.getElementById("keyCopyBtn").textContent = "¡COPIADO!";
+  setTimeout(() => { document.getElementById("keyCopyBtn").textContent = "COPIAR AL PORTAPAPELES"; }, 2000);
+};
+
+document.getElementById("keyCloseBtn").onclick = () => { document.getElementById("keyModal").style.display = "none"; };
+
+// Navegación de Pestañas
+document.getElementById("tabPublicaciones").onclick = () => {
+  document.getElementById("publicationsContainer").classList.remove("hidden");
+  document.getElementById("myKeysContainer").classList.add("hidden");
+  document.getElementById("tabPublicaciones").className = "flex-1 py-4 rounded-2xl font-bold border-2 border-neon-cyan bg-neon-cyan/10 text-neon-cyan";
+  document.getElementById("tabKeys").className = "flex-1 py-4 rounded-2xl font-bold border border-white/10 bg-white/5 text-white/60";
+};
+
+document.getElementById("tabKeys").onclick = () => {
+  document.getElementById("publicationsContainer").classList.add("hidden");
+  document.getElementById("myKeysContainer").classList.remove("hidden");
+  document.getElementById("tabKeys").className = "flex-1 py-4 rounded-2xl font-bold border-2 border-neon-pink bg-neon-pink/10 text-neon-pink";
+  document.getElementById("tabPublicaciones").className = "flex-1 py-4 rounded-2xl font-bold border border-white/10 bg-white/5 text-white/60";
+};
