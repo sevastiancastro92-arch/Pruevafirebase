@@ -358,7 +358,7 @@ async function updateKeysField(pubId, btnKeyIdentifier, originalBtn, newKeysArr)
   }
 }
 
-// --- NIVEL Y DESCUENTOS (ADMIN CONTROLLED) ---
+// --- NIVEL Y DESCUENTOS (VALORES FIJOS SOLICITADOS) ---
 const LEVEL_VIP_SPEND = 50;
 const LEVEL_PREMIUM_SPEND = 150;
 let userTotalSpending = 0; 
@@ -401,39 +401,33 @@ function loadUserSpendingAndLevel(email) {
     });
 }
 
-// --- MODAL CONFIRMACION (DINAMICO DESDE ADMIN) ---
+// --- MODAL CONFIRMACION (ACTUALIZADO CON DESCUENTOS 0.10 Y 0.20) ---
 let _pendingPurchase = null; 
 
 async function openConfirmModal(pubId, safeBtnId, price, rawBtnId) {
-    // 1. Obtener la data actual del botón directamente desde Firebase
-    const pubSnap = await db.ref(`publications/${pubId}`).once("value");
-    const pub = pubSnap.val();
-    const btn = Array.isArray(pub.buttons) ? pub.buttons[Number(rawBtnId)] : pub.buttons[rawBtnId];
-
-    // 2. Determinar rango y buscar descuento configurado por el admin para esta key
     const { level } = calculateLevel(userTotalSpending);
     
-    // Aquí el sistema lee lo que pusiste en el Admin: discountVIP o discountPremium
+    // Aplicar descuentos según nivel solicitado
     let discountAmount = 0;
     if (level === "VIP") {
-        discountAmount = parseFloat(btn.discountVIP || 0); // Ej: 0.50
+        discountAmount = 0.10;
     } else if (level === "Premium") {
-        discountAmount = parseFloat(btn.discountPremium || 0); // Ej: 1.00
+        discountAmount = 0.20;
     }
 
     const finalPrice = Math.max(0, price - discountAmount);
 
     confirmModal.style.display = "flex";
-    confirmText.textContent = `¿Comprar key? Precio: $${Number(price).toFixed(2)} USD`;
+    confirmText.textContent = `¿Comprar key? Precio original: $${Number(price).toFixed(2)} USD`;
 
     if (discountAmount > 0) {
         finalPriceDisplay.innerHTML = `
-            <span class="text-xl font-bold text-neon-green">Final: $${finalPrice.toFixed(2)} USD</span>
-            <span class="text-sm text-neon-cyan ml-2">(-$${discountAmount.toFixed(2)} Desc. ${level})</span>
+            <div class="text-xl font-bold text-neon-green">Total a pagar: $${finalPrice.toFixed(2)} USD</div>
+            <div class="text-xs text-neon-cyan mt-1">Beneficio ${level}: -$${discountAmount.toFixed(2)} de descuento</div>
         `;
     } else {
         finalPriceDisplay.textContent = `Final: $${finalPrice.toFixed(2)} USD`;
-        finalPriceDisplay.className = "text-neon-yellow";
+        finalPriceDisplay.className = "text-neon-yellow font-bold text-xl";
     }
 
     _pendingPurchase = { pubId, safeBtnId, price, rawBtnId, finalPrice, discountAmount };
@@ -463,7 +457,7 @@ async function comprarKey(pubId, safeBtnId, originalPrice, rawBtnId, finalPrice,
     let originalBtn = pub.buttons[btnIndexOrKey];
 
     const keysArr = parseKeysField(originalBtn.keys);
-    if (!keysArr.length) { alert("❌ Sin claves."); return; }
+    if (!keysArr.length) { alert("❌ Sin claves disponibles."); return; }
     const selected = keysArr.shift();
 
     // Actualizar base de datos
